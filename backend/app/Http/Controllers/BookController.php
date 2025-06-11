@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Author;
+use App\Models\Category;
+use App\Models\Publisher;
 use App\Http\Controllers\Controller;
 use App\Models\Book;
 use Illuminate\Http\Request;
@@ -13,7 +16,7 @@ class BookController extends Controller
      */
     public function index()
     {
-        $books = Book::latest()->paginate(10);
+        $books = Book::with(['author', 'category', 'publisher'])->paginate(10);
         return view('admin.books.index', compact('books'));
     }
 
@@ -22,7 +25,11 @@ class BookController extends Controller
      */
     public function create()
     {
-        return view('admin.books.create');
+        $authors = Author::all();
+        $categories = Category::all();
+        $publishers = Publisher::all();
+
+        return view('admin.books.create', compact('authors', 'categories', 'publishers'));
     }
 
     /**
@@ -34,10 +41,14 @@ class BookController extends Controller
             'title' => 'required',
             'price' => 'required|numeric',
             'stock' => 'required|integer',
+            'author_id' => 'required',
+            'publisher_id' => 'required',
+            'category_id' => 'required',
         ]);
 
         Book::create($request->all());
-        return redirect()->route('books.index')->with('success', 'Book created!');
+
+        return redirect()->route('books.index')->with('success', 'Book created successfully.');
     }
 
     /**
@@ -53,9 +64,12 @@ class BookController extends Controller
      */
     public function edit(Book $book)
     {
-        return view('admin.books.edit', compact('book'));
-    }
+        $authors = Author::all();
+        $categories = Category::all();
+        $publishers = Publisher::all();
 
+        return view('admin.books.edit', compact('book', 'authors', 'categories', 'publishers'));
+    }
     /**
      * Update the specified resource in storage.
      */
@@ -65,10 +79,14 @@ class BookController extends Controller
             'title' => 'required',
             'price' => 'required|numeric',
             'stock' => 'required|integer',
+            'author_id' => 'required',
+            'publisher_id' => 'required',
+            'category_id' => 'required',
         ]);
 
         $book->update($request->all());
-        return redirect()->route('books.index')->with('success', 'Book updated!');
+
+        return redirect()->route('books.index')->with('success', 'Book updated successfully.');
     }
 
     /**
