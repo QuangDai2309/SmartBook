@@ -82,8 +82,7 @@ class BookSeeder extends Seeder
             ],
         ];
 
-        foreach ($books as $book) {
-            Book::create($book);
+        foreach ($books as $book) {Book::create($book);
         }
     }
 }
