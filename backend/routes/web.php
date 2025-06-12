@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AuthorController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\BookController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PublisherController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,3 +19,4 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('books', BookController::class);
     Route::resource('banners', BannerController::class);
 });
+Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
