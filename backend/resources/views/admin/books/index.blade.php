@@ -10,17 +10,23 @@
 
     <a href="{{ route('admin.books.create') }}" class="btn btn-primary mb-3">➕ Thêm sách</a>
 
-    <table class="table table-bordered">
-        <thead>
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
             <tr>
-                <th>#</th><th>Tên sách</th><th>Tác giả</th><th>NXB</th><th>Danh mục</th>
-                <th>Giá</th><th>Tồn kho</th><th>Hành động</th>
+                <th>STT</th>
+                <th>Tên sách</th>
+                <th>Tác giả</th>
+                <th>NXB</th>
+                <th>Danh mục</th>
+                <th>Giá</th>
+                <th>Tồn kho</th>
+                <th>Hành động</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($books as $book)
+            @foreach ($books as $index => $book)
             <tr>
-                <td>{{ $book->id }}</td>
+                <td>{{ $index + 1 }}</td>
                 <td>{{ $book->title }}</td>
                 <td>{{ $book->author->name }}</td>
                 <td>{{ $book->publisher->name }}</td>
