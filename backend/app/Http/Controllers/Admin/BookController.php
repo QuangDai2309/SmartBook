@@ -13,9 +13,10 @@ class BookController extends Controller
 {
     public function index()
     {
-        $books = Book::with(['author', 'publisher', 'category'])->get();
+        $books = Book::with(['author', 'publisher', 'category'])->paginate(10); // 10 sách mỗi trang
         return view('admin.books.index', compact('books'));
     }
+
 
     public function create()
     {
@@ -29,14 +30,22 @@ class BookController extends Controller
     {
         $request->validate([
             'title' => 'required|max:255',
-            'author_id' => 'required',
-            'publisher_id' => 'required',
-            'category_id' => 'required',
-            'price' => 'required|numeric',
-            'stock' => 'required|integer'
+            'author_id' => 'required|exists:authors,id',
+            'publisher_id' => 'required|exists:publishers,id',
+            'category_id' => 'required|exists:categories,id',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
         ]);
 
-        Book::create($request->all());
+        Book::create($request->only([
+            'title',
+            'author_id',
+            'publisher_id',
+            'category_id',
+            'price',
+            'stock',
+        ]));
+
         return redirect()->route('admin.books.index')->with('success', 'Đã thêm sách mới.');
     }
 
@@ -52,14 +61,22 @@ class BookController extends Controller
     {
         $request->validate([
             'title' => 'required|max:255',
-            'author_id' => 'required',
-            'publisher_id' => 'required',
-            'category_id' => 'required',
-            'price' => 'required|numeric',
-            'stock' => 'required|integer'
+            'author_id' => 'required|exists:authors,id',
+            'publisher_id' => 'required|exists:publishers,id',
+            'category_id' => 'required|exists:categories,id',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
         ]);
 
-        $book->update($request->all());
+        $book->update($request->only([
+            'title',
+            'author_id',
+            'publisher_id',
+            'category_id',
+            'price',
+            'stock',
+        ]));
+
         return redirect()->route('admin.books.index')->with('success', 'Đã cập nhật sách.');
     }
 
