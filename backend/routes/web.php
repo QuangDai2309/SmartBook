@@ -1,44 +1,45 @@
 <?php
 
-<<<<<<< HEAD
-use App\Http\Controllers\Home\BookController;
+use Illuminate\Support\Facades\Route;
+
+// Home (User-side) Controllers
+use App\Http\Controllers\Home\BookController as HomeBookController;
 use App\Http\Controllers\Home\BuybookController;
 use App\Http\Controllers\Home\EbookController;
-=======
+
+// Admin Controllers
 use App\Http\Controllers\Admin\AuthorController;
 use App\Http\Controllers\Admin\BannerController;
-use App\Http\Controllers\Admin\BookController;
+use App\Http\Controllers\Admin\BookController as AdminBookController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PublisherController;
->>>>>>> f1a15383b71f715a9a2828075d4b021cc99f54bb
-use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-<<<<<<< HEAD
-//api allbooks
-Route::get('api/books', [BookController::class, 'index']);
-//api chitiet
-Route::get('api/books/{id}', [BookController::class, 'show']);
-//api ebooks
-Route::get('api/ebooks', [EbookController::class, 'Ebooks']);
-//api buy books
-Route::get('api/buyBooks', [BuybookController::class, 'buyBooks']);
+// // ===================== API for client side =====================
+// // api: Danh sách tất cả sách
+// Route::get('api/books', [HomeBookController::class, 'index']);
+// // api: Chi tiết sách
+// Route::get('api/books/{id}', [HomeBookController::class, 'show']);
+// // api: Sách điện tử
+// Route::get('api/ebooks', [EbookController::class, 'Ebooks']);
+// // api: Sách có thể mua
+// Route::get('api/buyBooks', [BuybookController::class, 'buyBooks']);
 
-Route::resource('books', BookController::class);
-Route::get('/test-api', function () {
-    return response()->json(['message' => 'OK']);
-});
-=======
+// // Test route
+// Route::get('/test-api', function () {
+//     return response()->json(['message' => 'OK']);
+// });
+
+// ===================== Admin Routes =====================
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('authors', AuthorController::class);
     Route::resource('publishers', PublisherController::class);
     Route::resource('categories', CategoryController::class);
-    Route::resource('books', BookController::class);
+    Route::resource('books', AdminBookController::class);
     Route::resource('banners', BannerController::class);
 });
 Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
->>>>>>> f1a15383b71f715a9a2828075d4b021cc99f54bb

@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
-    
+
 public function index()
 {
     $books = Book::with(['author', 'category', 'publisher'])->get();
@@ -22,9 +22,9 @@ public function index()
         'data' => $books
     ]);
 }
-    
 
- // sách chi tiếttiết
+
+ // sách chi tiết
     public function show($id)
     {
         $book = Book::find($id);
