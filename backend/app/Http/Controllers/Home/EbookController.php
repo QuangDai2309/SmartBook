@@ -18,7 +18,7 @@ public function Ebooks(Request $request)
     $page = $request->query('page', 1);
 
     $query = Book::where('is_physical', 1)
-        ->select('title', 'cover_image');
+        ->select('id', 'title', 'cover_image');
 
     $total = $query->count();
 
