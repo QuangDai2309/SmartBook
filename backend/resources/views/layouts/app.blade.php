@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> {{-- ⚠️ Thiếu thẻ này nên chưa responsive --}}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Trang quản trị')</title>
 
     {{-- Bootstrap CSS --}}
@@ -11,7 +11,7 @@
     {{-- Bootstrap Icons --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-    @stack('styles') {{-- Nếu muốn thêm CSS riêng từ child --}}
+    @stack('styles')
 </head>
 <body>
     {{-- Navbar --}}
@@ -34,15 +34,22 @@
         </div>
     </nav>
 
-    {{-- Nội dung --}}
+    {{-- Nội dung chính --}}
     <main class="py-4">
         <div class="container">
             @yield('content')
         </div>
     </main>
 
-    {{-- Bootstrap JS (bắt buộc nếu muốn responsive và xử lý dropdown, alert,...) --}}
+    {{-- Bootstrap JS --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    @stack('scripts') {{-- Thêm JS tùy trang --}}
+    @stack('scripts')
 </body>
 </html>
+<style>
+    /* Giảm size icon SVG trong phân trang */
+    .pagination .page-link svg {
+        width: 14px;
+        height: 14px;
+    }
+</style>

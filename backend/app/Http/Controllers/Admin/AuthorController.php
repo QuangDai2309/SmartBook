@@ -8,11 +8,17 @@ use Illuminate\Http\Request;
 
 class AuthorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $authors = Author::all();
+        $search = $request->query('search');
+
+        $authors = Author::when($search, function ($query, $search) {
+            return $query->where('name', 'like', "%$search%");
+        })->orderBy('id', 'desc')->paginate(10);
+
         return view('admin.authors.index', compact('authors'));
     }
+
 
     public function create()
     {
@@ -22,15 +28,16 @@ class AuthorController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|max:100'
+            'name' => 'required|string|max:255',
         ]);
 
         Author::create([
-            'name' => $request->name
+            'name' => $request->name,
         ]);
 
-        return redirect()->route('admin.authors.index')->with('success', '✅ Tác giả đã được thêm.');
+        return redirect()->route('admin.authors.index')->with('success', 'Tác giả đã được thêm thành công!');
     }
+
 
     public function edit(Author $author)
     {

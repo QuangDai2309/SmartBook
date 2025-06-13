@@ -8,11 +8,19 @@ use Illuminate\Http\Request;
 
 class PublisherController extends Controller
 {
-    public function index()
-    {
-        $publishers = Publisher::all();
-        return view('admin.publishers.index', compact('publishers'));
+    public function index(Request $request)
+{
+    $query = Publisher::query();
+
+    if ($request->has('search')) {
+        $query->where('name', 'like', '%' . $request->search . '%');
     }
+
+    $publishers = $query->orderBy('name')->paginate(10); // dùng paginate, không phải get()
+
+    return view('admin.publishers.index', compact('publishers'));
+}
+
 
     public function create()
     {

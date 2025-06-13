@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+
+// Home (User-side) Controllers
 use App\Http\Controllers\Home\BookController as HomeBookController;
 use App\Http\Controllers\Home\BuybookController;
 use App\Http\Controllers\Home\EbookController;
@@ -11,12 +14,12 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PublisherController;
 
-use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+// ===================== Admin Routes =====================
 // Home APIs
 Route::get('api/books', [HomeBookController::class, 'index']);
 Route::get('api/books/{id}', [HomeBookController::class, 'show']);

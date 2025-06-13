@@ -11,24 +11,7 @@ use Illuminate\Http\Request;
 use App\Models\Banner;
 class BookController extends Controller
 {
-
-
-       public function banners()
-    {
-        // Trả về banner
-         $banners = Banner::orderBy('id', 'desc')
-        ->take(5)
-        ->get(['id', 'image', 'link']);
-
-    return response()->json([
-        'status' => 'success',
-        'banners' => $banners
-    ]);
-    }
-
-
-    
-   public function index()
+  public function index()
 {
 
 
@@ -68,6 +51,7 @@ class BookController extends Controller
         'latest_ebooks' => $latestEbooks             // 10 sách điện tử mới
     ]);
 }
+
 
     // Chi tiết sách
     public function show($id)
