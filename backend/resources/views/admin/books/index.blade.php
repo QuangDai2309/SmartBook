@@ -44,5 +44,8 @@
             @endforeach
         </tbody>
     </table>
+    <div class="mt-4 text-center">
+            {{ $books->appends(['search' => request('search')])->links('pagination::bootstrap-5') }}
+        </div>
 </div>
 @endsection
