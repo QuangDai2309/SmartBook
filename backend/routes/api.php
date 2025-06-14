@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Home\BookFollowController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Home\BookController;
 use App\Http\Controllers\Home\EbookController;
@@ -9,3 +10,4 @@ use App\Http\Controllers\Home\EbookController;
 Route::get('/books', [BookController::class, 'index']);
 Route::get('/books/{id}', [BookController::class, 'show']);
 Route::get('/ebooks', [EbookController::class, 'listEbooks']);
+Route::post('books/follow', [BookFollowController::class, 'follow']);
