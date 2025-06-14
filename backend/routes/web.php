@@ -21,12 +21,12 @@ Route::get('/', function () {
 
 // ===================== Admin Routes =====================
 // Home APIs
-Route::get('api/books', [HomeBookController::class, 'index']);
-Route::get('api/books/{id}', [HomeBookController::class, 'show']);
-Route::get('api/ebooks', [EbookController::class, 'Ebooks']);
-Route::get('api/buyBooks', [BuybookController::class, 'buyBooks']);
-Route::resource('books', HomeBookController::class);
-Route::get('api/banners', [HomeController::class, 'banners']);
+// Route::get('api/books', [HomeBookController::class, 'index']);
+// Route::get('api/books/{id}', [HomeBookController::class, 'show']);
+// Route::get('api/ebooks', [EbookController::class, 'Ebooks']);
+// Route::get('api/buyBooks', [BuybookController::class, 'buyBooks']);
+// Route::resource('books', HomeBookController::class);
+// Route::get('api/banners', [HomeController::class, 'banners']);
 
 Route::get('/test-api', function () {
     return response()->json(['message' => 'OK']);
