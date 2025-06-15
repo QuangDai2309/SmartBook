@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Home\BookController as HomeBookController;
 use App\Http\Controllers\Home\BuybookController;
 use App\Http\Controllers\Home\EbookController;
-
 use App\Http\Controllers\Admin\AuthorController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\BookController as AdminBookController;
@@ -14,25 +13,31 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PublisherController;
 
+use App\Http\Controllers\Home\BookFollowController;
+use Illuminate\Support\Facades\Route;
+
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+
+// // Home APIs
+// Route::get('api/books', [HomeBookController::class, 'index']);
+// Route::get('api/books/{id}', [HomeBookController::class, 'show']);
+// Route::get('api/ebooks', [EbookController::class, 'Ebooks']);
+// Route::get('api/buyBooks', [BuybookController::class, 'buyBooks']);
+// Route::resource('books', HomeBookController::class);
+// Route::get('api/banners', [HomeBookController::class, 'banners']);
+
+
+// APIS Book follow
+// Route::get('api/followed-books', [BookFollowController::class, 'getFollowedBooksByUser']);
+
+// Route::post('api/books/follow', [BookFollowController::class, 'follow']);
+// Route::post('api/books/unfollow', [BookFollowController::class, 'unfollow']);
+
 // ===================== Admin Routes =====================
-// Home APIs
-Route::get('api/books', [HomeBookController::class, 'index']);
-Route::get('api/books/{id}', [HomeBookController::class, 'show']);
-Route::get('api/ebooks', [EbookController::class, 'Ebooks']);
-Route::get('api/buyBooks', [BuybookController::class, 'buyBooks']);
-Route::resource('books', HomeBookController::class);
-Route::get('api/banners', [HomeController::class, 'banners']);
-
-Route::get('/test-api', function () {
-    return response()->json(['message' => 'OK']);
-});
-
-// Admin routes
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('authors', AuthorController::class);
     Route::resource('publishers', PublisherController::class);
@@ -40,4 +45,25 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('books', AdminBookController::class);
     Route::resource('banners', BannerController::class);
 });
-Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+?>
