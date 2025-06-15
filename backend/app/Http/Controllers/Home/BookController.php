@@ -9,65 +9,48 @@ use App\Http\Controllers\Controller;
 use App\Models\Book;
 use Illuminate\Http\Request;
 use App\Models\Banner;
+
 class BookController extends Controller
 {
-
-
-       public function banners()
+    public function index()
     {
-        // Trả về banner
-         $banners = Banner::orderBy('id', 'desc')
-        ->take(5)
-        ->get(['id', 'image', 'link']);
+        // 5 sách giấy được thích nhiều nhất
+        $topLikedBooks = Book::with(['author', 'category', 'publisher'])
+            ->where('is_physical', 0)
+            ->orderByDesc('likes')
+            ->take(5)
+            ->get();
 
-    return response()->json([
-        'status' => 'success',
-        'banners' => $banners
-    ]);
+        // 5 sách giấy được xem nhiều nhất
+        $topViewedBooks = Book::with(['author', 'category', 'publisher'])
+            ->where('is_physical', 0)
+            ->orderByDesc('views')
+            ->take(5)
+            ->get();
+
+        // 10 sách giấy mới nhất
+        $latestPaperBooks = Book::with(['author', 'category', 'publisher'])
+            ->where('is_physical', 0)
+            ->orderByDesc('created_at')
+            ->take(10)
+            ->get();
+
+        // 10 sách ebook mới nhất
+        $latestEbooks = Book::with(['author', 'category', 'publisher'])
+            ->where('is_physical', 1)
+            ->orderByDesc('created_at')
+            ->take(10)
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'top_liked_books' => $topLikedBooks,         // 5 sách giấy yêu thích nhất
+            'top_viewed_books' => $topViewedBooks,       // 5 sách giấy xem nhiều nhất
+            'latest_paper_books' => $latestPaperBooks,   // 10 sách giấy mới
+            'latest_ebooks' => $latestEbooks             // 10 sách điện tử mới
+        ]);
     }
 
-
-    
-   public function index()
-{
-
-
-    // 5 sách giấy được thích nhiều nhất
-    $topLikedBooks = Book::with(['author', 'category', 'publisher'])
-        ->where('is_physical', 0)
-        ->orderByDesc('likes')
-        ->take(5)
-        ->get();
-
-    // 5 sách giấy được xem nhiều nhất
-    $topViewedBooks = Book::with(['author', 'category', 'publisher'])
-        ->where('is_physical', 0)
-        ->orderByDesc('views')
-        ->take(5)
-        ->get();
-
-    // 10 sách giấy mới nhất
-    $latestPaperBooks = Book::with(['author', 'category', 'publisher'])
-        ->where('is_physical', 0)
-        ->orderByDesc('created_at')
-        ->take(10)
-        ->get();
-
-    // 10 sách ebook mới nhất
-    $latestEbooks = Book::with(['author', 'category', 'publisher'])
-        ->where('is_physical', 1)
-        ->orderByDesc('created_at')
-        ->take(10)
-        ->get();
-
-    return response()->json([
-        'status' => 'success',
-        'top_liked_books' => $topLikedBooks,         // 5 sách giấy yêu thích nhất
-        'top_viewed_books' => $topViewedBooks,       // 5 sách giấy xem nhiều nhất
-        'latest_paper_books' => $latestPaperBooks,   // 10 sách giấy mới
-        'latest_ebooks' => $latestEbooks             // 10 sách điện tử mới
-    ]);
-}
 
     // Chi tiết sách
     public function show($id)

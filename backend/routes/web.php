@@ -1,21 +1,26 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+
+// Home (User-side) Controllers
 use App\Http\Controllers\Home\BookController as HomeBookController;
 use App\Http\Controllers\Home\BuybookController;
 use App\Http\Controllers\Home\EbookController;
-
 use App\Http\Controllers\Admin\AuthorController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\BookController as AdminBookController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PublisherController;
+
 use App\Http\Controllers\Home\BookFollowController;
 use Illuminate\Support\Facades\Route;
+
 
 Route::get('/', function () {
     return view('welcome');
 });
+
 
 // // Home APIs
 // Route::get('api/books', [HomeBookController::class, 'index']);
@@ -32,13 +37,7 @@ Route::get('/', function () {
 // Route::post('api/books/follow', [BookFollowController::class, 'follow']);
 // Route::post('api/books/unfollow', [BookFollowController::class, 'unfollow']);
 
-
-
-Route::get('/test-api', function () {
-    return response()->json(['message' => 'OK']);
-});
-
-// Admin routes
+// ===================== Admin Routes =====================
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('authors', AuthorController::class);
     Route::resource('publishers', PublisherController::class);
