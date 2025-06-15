@@ -17,20 +17,20 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Home APIs
-Route::get('api/books', [HomeBookController::class, 'index']);
-Route::get('api/books/{id}', [HomeBookController::class, 'show']);
-Route::get('api/ebooks', [EbookController::class, 'Ebooks']);
-Route::get('api/buyBooks', [BuybookController::class, 'buyBooks']);
-Route::resource('books', HomeBookController::class);
-Route::get('api/banners', [HomeBookController::class, 'banners']);
+// // Home APIs
+// Route::get('api/books', [HomeBookController::class, 'index']);
+// Route::get('api/books/{id}', [HomeBookController::class, 'show']);
+// Route::get('api/ebooks', [EbookController::class, 'Ebooks']);
+// Route::get('api/buyBooks', [BuybookController::class, 'buyBooks']);
+// Route::resource('books', HomeBookController::class);
+// Route::get('api/banners', [HomeBookController::class, 'banners']);
 
 
-// APIS Book follow 
-Route::get('api/followed-books', [BookFollowController::class, 'getFollowedBooksByUser']);
+// APIS Book follow
+// Route::get('api/followed-books', [BookFollowController::class, 'getFollowedBooksByUser']);
 
-Route::post('api/books/follow', [BookFollowController::class, 'follow']);
-Route::post('api/books/unfollow', [BookFollowController::class, 'unfollow']);
+// Route::post('api/books/follow', [BookFollowController::class, 'follow']);
+// Route::post('api/books/unfollow', [BookFollowController::class, 'unfollow']);
 
 
 
