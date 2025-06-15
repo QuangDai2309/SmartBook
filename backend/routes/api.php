@@ -13,7 +13,7 @@ Route::get('/user', function (Request $request) {
 
 
 
-\log::info('✅ API route file loaded'); // LOG kiểm tra
+// \log::info('✅ API route file loaded'); // LOG kiểm tra
 
 
 Route::get('/books', [BookController::class, 'index']);
