@@ -1,12 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
-
-// Home (User-side) Controllers
-use App\Http\Controllers\Home\BookController as HomeBookController;
-use App\Http\Controllers\Home\BuybookController;
-use App\Http\Controllers\Home\EbookController;
-use App\Http\Controllers\Home\BookFollowController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\AuthorController;
@@ -16,33 +11,22 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PublisherController;
 
+// Home Controllers
+use App\Http\Controllers\Home\BookController as HomeBookController;
+
 // Auth
 use App\Http\Controllers\Auth\GoogleController; 
 use App\Http\Controllers\ProfileController;
 
-// Trang chủ
+// ===================== Public Routes =====================
 Route::get('/', function () {
     return view('welcome');
 });
 
-// ===================== Home APIs =====================
-Route::get('api/books', [HomeBookController::class, 'index']);
-Route::get('api/books/{id}', [HomeBookController::class, 'show']);
-Route::get('api/ebooks', [EbookController::class, 'Ebooks']);
-Route::get('api/buyBooks', [BuybookController::class, 'buyBooks']);
+// Resource route cho books (web interface)
 Route::resource('books', HomeBookController::class);
 
-// Test API
-Route::get('/test-api', function () {
-    return response()->json(['message' => 'OK']);
-});
-
-// ===================== API Book Follow =====================
-Route::get('api/followed-books', [BookFollowController::class, 'getFollowedBooksByUser']);
-Route::post('api/books/follow', [BookFollowController::class, 'follow']);
-Route::post('api/books/unfollow', [BookFollowController::class, 'unfollow']);
-
-// ===================== Admin Routes =====================
+// ===================== Admin Routes (GIỮ CSRF) =====================
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('authors', AuthorController::class);
     Route::resource('publishers', PublisherController::class);
@@ -67,6 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
 
 // Auth scaffolding
 require __DIR__.'/auth.php';

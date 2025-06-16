@@ -7,9 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class BookFollow extends Model
 {
     public $timestamps = false; // Vì chỉ có created_at
-
+    protected $table = 'book_follows';
     protected $fillable = [
-        'book_id', 'user_id'
+        'book_id',
+        'user_id'
     ];
 
     public function user()

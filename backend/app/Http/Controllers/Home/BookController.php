@@ -58,7 +58,7 @@ class BookController extends Controller
         $book = Book::with(['author', 'publisher', 'category'])->find($id);
 
         if (!$book) {
-            return response()->json(['message' => 'Book not found'], 404);
+            return response()->json(['message' => 'Book not found1'], 404);
         }
 
         if ($book->is_physical == 1) {
