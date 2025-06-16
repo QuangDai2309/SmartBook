@@ -26,4 +26,3 @@ Route::post('/books/unfollow', [BookFollowController::class, 'unfollow']);
 Route::get('/test-api', function () {
     return response()->json(['message' => 'API đang hoạt động ✅']);
 });
-
