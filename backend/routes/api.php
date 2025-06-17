@@ -8,18 +8,33 @@ use App\Http\Controllers\Home\BookFollowController;
 use App\Http\Controllers\Home\EbookController;
 use App\Http\Controllers\Home\BuybookController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\AuthorController;
+use App\Http\Controllers\CategoryController;
 
 // Lấy thông tin user bằng sanctum (nếu dùng Sanctum thôi)
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+Route::get('/authors', [AuthorController::class, 'index']);
+Route::get('/authors/with-books', [AuthorController::class, 'indexWithBooks']);
+Route::get('/authors/{id}', [AuthorController::class, 'show']);
+Route::get('/authors/{id}/with-books', [AuthorController::class, 'showWithBooks']);
+
+
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/with-books', [CategoryController::class, 'indexWithBooks']);
+Route::get('/categories/{id}', [CategoryController::class, 'show']);
+Route::get('/categories/{id}/with-books', [CategoryController::class, 'showWithBooks']);
+Route::post('/categories', [CategoryController::class, 'store']);
+Route::put('/categories/{id}', [CategoryController::class, 'update']);
+Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+
 // Public routes - không cần đăng nhập
 Route::get('/books', [BookController::class, 'index']);
 Route::get('/ebooks', [EbookController::class, 'Ebooks']);
 Route::get('/buybooks', [BuybookController::class, 'buyBooks']);
-
-
+Route::get('/books/search', [BookController::class, 'search']);
 Route::get('/test-api', function () {
     return response()->json(['message' => 'API đang hoạt động ✅']);
 });

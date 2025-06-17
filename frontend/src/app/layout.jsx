@@ -1,5 +1,5 @@
 import './globals.css';
-import Header from './components/Header/Header';
+import ConditionalHeader from './components/ConditionalHeader';
 
 export const metadata = {
   title: 'Waka Web',
@@ -10,10 +10,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="vi">
       <body>
-        <Header />
-        <main className="main-content">
-          {children}
-        </main>
+        <ConditionalHeader />
+        <main className="main-content">{children}</main>
       </body>
     </html>
   );
