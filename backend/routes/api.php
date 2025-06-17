@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Home\BookController;
@@ -18,19 +19,39 @@ Route::get('/ebooks', [EbookController::class, 'listEbooks']);
 Route::get('/test-api', function () {
     return response()->json(['message' => 'API đang hoạt động ✅']);
 });
-
+Route::post('/register', [AuthController::class, 'register']);
 // Route đăng nhập
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/login/google', [GoogleController::class, 'redirectToGoogle']);
+
+//api login google
+Route::get('/google-redirect', function () {
+    return view('auth.google-redirect'); // Tạo file blade này
+});
+
+Route::get('/login/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+
+// routes/api.php
+Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('reset-password', [AuthController::class, 'resetPassword']);
+    
+Route::get('/reset-password', function (Request $request) {
+    return view('auth.reset-password', [
+        'token' => $request->token,
+        'email' => $request->email
+    ]);
+})->name('password.reset');
+
 
 // Route lấy thông tin người dùng sau đăng nhập (DÙNG TOKEN NHƯ /me)
 Route::get('/me', [AuthController::class, 'me']); // không cần middleware
 
 // Protected routes - cần token Bearer (auth:api)
- 
-    Route::get('/books/followed', [BookFollowController::class, 'getFollowedBooksByUser']);
-    Route::post('/books/follow', [BookFollowController::class, 'follow']);
-    Route::delete('/books/unfollow', [BookFollowController::class, 'unfollow']);
-    Route::get('/books/check-follow', [BookFollowController::class, 'checkFollowStatus']);
- 
+
+Route::get('/books/followed', [BookFollowController::class, 'getFollowedBooksByUser']);
+Route::post('/books/follow', [BookFollowController::class, 'follow']);
+Route::delete('/books/unfollow', [BookFollowController::class, 'unfollow']);
+Route::get('/books/check-follow', [BookFollowController::class, 'checkFollowStatus']);
+
 // Quan trọng: đặt sau cùng để tránh nuốt route
 Route::get('/books/{id}', [BookController::class, 'show']);

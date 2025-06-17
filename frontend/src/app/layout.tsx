@@ -1,3 +1,6 @@
+import 'antd/dist/reset.css'; // antd v5+ cần cái này
+import './globals.css'; // Tailwind
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
