@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Home\EbookController;
 use Illuminate\Support\Facades\Route;
 
 // Admin Controllers
@@ -44,6 +45,7 @@ Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallb
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/', [EbookController::class, 'listEbooks']);
 
 // ===================== User Profile =====================
 Route::middleware('auth')->group(function () {

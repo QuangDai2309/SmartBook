@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Home\BookController;
 use App\Http\Controllers\Home\BookFollowController;
 use App\Http\Controllers\Home\EbookController;
+use App\Http\Controllers\Home\BuybookController;
 use App\Http\Controllers\Auth\AuthController;
 
 // Lấy thông tin user bằng sanctum (nếu dùng Sanctum thôi)
@@ -15,7 +16,10 @@ Route::get('/user', function (Request $request) {
 
 // Public routes - không cần đăng nhập
 Route::get('/books', [BookController::class, 'index']);
-Route::get('/ebooks', [EbookController::class, 'listEbooks']);
+Route::get('/ebooks', [EbookController::class, 'Ebooks']);
+Route::get('/buybooks', [BuybookController::class, 'buyBooks']);
+
+
 Route::get('/test-api', function () {
     return response()->json(['message' => 'API đang hoạt động ✅']);
 });
