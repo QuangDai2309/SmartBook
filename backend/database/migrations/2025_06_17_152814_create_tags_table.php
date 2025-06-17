@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('book_reads', function (Blueprint $table) {
+        Schema::create('tags', function (Blueprint $table) {
             $table->id();
+            $table->string('name'); // Tên tag, ví dụ: "Trinh thám", "Hot", "Miễn phí"
+            $table->string('slug')->unique(); // slug để gắn vào URL
+            $table->boolean('is_hidden')->default(false); // ẩn/hiện tag
             $table->timestamps();
         });
     }
@@ -22,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('book_reads');
+        Schema::dropIfExists('tags');
     }
 };
