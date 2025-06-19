@@ -15,7 +15,6 @@ return new class extends Migration
             $table->foreignId('book_id')->constrained('books')->onDelete('cascade');
             $table->foreignId('tag_id')->constrained('tags')->onDelete('cascade');
             $table->timestamp('created_at')->nullable();
-
             $table->primary(['book_id', 'tag_id']); // Khóa chính tổng hợp
         });
     }

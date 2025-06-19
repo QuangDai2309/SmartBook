@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('book_categories', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('parent_id')->nullable()->default(null);
             $table->string('name');                     // Tên danh mục
             $table->string('slug')->unique();           // Slug cho URL
             $table->text('description')->nullable();    // Mô tả

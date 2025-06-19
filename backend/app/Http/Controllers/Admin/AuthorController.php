@@ -3,18 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Author;
 use Illuminate\Http\Request;
+use App\Models\Author;
 
 class AuthorController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->query('search');
+        $query = Author::query();
 
-        $authors = Author::when($search, function ($query, $search) {
-            return $query->where('name', 'like', "%$search%");
-        })->orderBy('id', 'desc')->paginate(10);
+        if ($request->filled('keyword')) {
+            $query->where('name', 'like', '%' . $request->keyword . '%');
+        }
+
+        $authors = $query->orderByDesc('id')->paginate(10);
 
         return view('admin.authors.index', compact('authors'));
     }
@@ -27,17 +29,17 @@ class AuthorController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
         ]);
 
         Author::create([
-            'name' => $request->name,
+            'name' => $validated['name'],
+            'is_hidden' => $request->has('is_hidden'),
         ]);
 
-        return redirect()->route('admin.authors.index')->with('success', 'Tác giả đã được thêm thành công!');
+        return redirect()->route('admin.authors.index')->with('success', 'Thêm tác giả thành công!');
     }
-
 
     public function edit(Author $author)
     {
@@ -46,21 +48,22 @@ class AuthorController extends Controller
 
     public function update(Request $request, Author $author)
     {
-        $request->validate([
-            'name' => 'required|max:100'
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
         ]);
 
         $author->update([
-            'name' => $request->name
+            'name' => $validated['name'],
+            'is_hidden' => $request->has('is_hidden'),
         ]);
 
-        return redirect()->route('admin.authors.index')->with('success', '✅ Tác giả đã được cập nhật.');
+        return redirect()->route('admin.authors.index')->with('success', 'Cập nhật tác giả thành công!');
     }
 
     public function destroy(Author $author)
     {
         $author->delete();
 
-        return redirect()->route('admin.authors.index')->with('success', '🗑️ Tác giả đã bị xóa.');
+        return redirect()->route('admin.authors.index')->with('success', 'Xóa tác giả thành công!');
     }
 }
