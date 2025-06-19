@@ -7,29 +7,39 @@ use Illuminate\Database\Eloquent\Model;
 class Book extends Model
 {
     protected $fillable = [
+        'book_code',
         'title',
+        'slug',
         'description',
-        'cover_image',
         'author_id',
         'publisher_id',
         'category_id',
-        'is_physical',
         'price',
+        'discount_price',
+        'book_type',
         'stock',
-        'views',
-        'likes'
+        'is_featured',
+        'published_year',
+        'language',
+        'page_count',
+        'weight',
+        'dimensions',
+        'is_hidden',
+        'status',
     ];
 
     public function author()
     {
         return $this->belongsTo(Author::class);
     }
+
     public function publisher()
     {
         return $this->belongsTo(Publisher::class);
     }
+
     public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(BookCategory::class, 'category_id');
     }
 }

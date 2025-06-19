@@ -4,22 +4,40 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PublisherSeeder extends Seeder
 {
-    public function run()
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
     {
         DB::table('publishers')->insert([
-            ['id' => 1, 'name' => 'Shueisha'],
-            ['id' => 2, 'name' => 'Kodansha'],
-            ['id' => 3, 'name' => 'Bloomsbury Publishing'],
-            ['id' => 4, 'name' => 'Bantam Books'],
-            ['id' => 5, 'name' => 'Vintage International'],
-            ['id' => 6, 'name' => 'Scribner'],
-            ['id' => 7, 'name' => 'HarperCollins'],
-            ['id' => 8, 'name' => 'Doubleday'],
-            ['id' => 9, 'name' => 'Scholastic'],
-            ['id' => 10, 'name' => 'William Morrow'],
+            [
+                'name' => 'NXB Trẻ',
+                'is_hidden' => false,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ],
+            [
+                'name' => 'NXB Kim Đồng',
+                'is_hidden' => false,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ],
+            [
+                'name' => 'NXB Văn Học',
+                'is_hidden' => false,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ],
+            [
+                'name' => 'NXB Tổng Hợp TP.HCM',
+                'is_hidden' => true,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ]
         ]);
     }
 }

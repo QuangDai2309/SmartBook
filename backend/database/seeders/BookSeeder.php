@@ -4,85 +4,37 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Book;
+use Illuminate\Support\Str;
 
 class BookSeeder extends Seeder
 {
     public function run(): void
     {
-        $books = [
-            [
-                'title' => 'One Piece',
-                'description' => 'Hành trình của Luffy để trở thành Vua Hải Tặc.',
-                'author_id' => 1,
-                'publisher_id' => 1,
-                'category_id' => 1,
-            ],
-            [
-                'title' => 'Naruto',
-                'description' => 'Câu chuyện về ninja Uzumaki Naruto.',
-                'author_id' => 2,
-                'publisher_id' => 1,
-                'category_id' => 1,
-            ],
-            [
-                'title' => 'Attack on Titan',
-                'description' => 'Cuộc chiến sinh tồn giữa loài người và Titan.',
-                'author_id' => 3,
-                'publisher_id' => 2,
-                'category_id' => 1,
-            ],
-            [
-                'title' => 'Doraemon',
-                'description' => 'Chú mèo máy đến từ tương lai giúp đỡ Nobita.',
-                'author_id' => 4,
-                'publisher_id' => 3,
-                'category_id' => 2,
-            ],
-            [
-                'title' => 'Detective Conan',
-                'description' => 'Thám tử học sinh bị teo nhỏ phá giải các vụ án.',
-                'author_id' => 5,
-                'publisher_id' => 3,
-                'category_id' => 2,
-            ],
-            [
-                'title' => 'Dragon Ball',
-                'description' => 'Cuộc phiêu lưu của Son Goku từ bé đến khi trưởng thành.',
-                'author_id' => 6,
-                'publisher_id' => 1,
-                'category_id' => 1,
-            ],
-            [
-                'title' => 'Death Note',
-                'description' => 'Cuốn sổ tử thần và cuộc đấu trí giữa L và Kira.',
-                'author_id' => 7,
-                'publisher_id' => 2,
-                'category_id' => 3,
-            ],
-            [
-                'title' => 'Jujutsu Kaisen',
-                'description' => 'Chiến đấu với lời nguyền để bảo vệ nhân loại.',
-                'author_id' => 8,
-                'publisher_id' => 2,
-                'category_id' => 1,
-            ],
-            [
-                'title' => 'Chainsaw Man',
-                'description' => 'Chàng trai biến thành người máy cưa chống lại quỷ dữ.',
-                'author_id' => 9,
-                'publisher_id' => 2,
-                'category_id' => 1,
-            ],
-            [
-                'title' => 'Tokyo Revengers',
-                'description' => 'Quay ngược thời gian để cứu người mình yêu.',
-                'author_id' => 10,
-                'publisher_id' => 2,
-                'category_id' => 1,
-            ],
-        ];
+        // Ví dụ tạo 5 sách mẫu
+        for ($i = 1; $i <= 5; $i++) {
+            Book::create([
+                'book_code'      => 'BOOK' . str_pad($i, 3, '0', STR_PAD_LEFT),
+                'title'          => 'Sách mẫu số ' . $i,
+                'slug'           => Str::slug('Sách mẫu số ' . $i),
+                'description'    => 'Đây là mô tả ngắn cho sách mẫu số ' . $i,
+                'author_id'      => rand(1, 3), // đảm bảo đã có author_id 1-3
+                'publisher_id'   => rand(1, 3), // đảm bảo đã có publisher_id 1-3
+                'category_id'    => rand(1, 3), // đảm bảo đã có book_category_id 1-3
 
-        foreach ($books as $book) {Book::create($book);
+                'price'          => rand(100, 300) * 1000,
+                'discount_price' => rand(1, 5) % 2 == 0 ? rand(50, 100) * 1000 : null,
+                'book_type'      => ['physical', 'ebook'][rand(0, 1)],
+                'stock'          => rand(10, 100),
+                'is_featured'    => rand(0, 1),
+
+                'published_year' => rand(2018, 2023),
+                'language'       => 'Tiếng Việt',
+                'page_count'     => rand(100, 500),
+                'weight'         => rand(200, 800) / 10,
+                'dimensions'     => '20x13x2 cm',
+                'is_hidden'      => false,
+                'status'         => ['available', 'coming_soon', 'unavailable'][rand(0, 2)],
+            ]);
         }
     }
 }
