@@ -45,7 +45,7 @@ Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallb
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
-Route::get('/', [EbookController::class, 'listEbooks']);
+
 
 // ===================== User Profile =====================
 Route::middleware('auth')->group(function () {

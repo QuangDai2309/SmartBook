@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\BannerController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Home\BookController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Home\BuybookController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\RatingController;
 
 // Lấy thông tin user bằng sanctum (nếu dùng Sanctum thôi)
 Route::get('/user', function (Request $request) {
@@ -71,6 +73,36 @@ Route::get('/books/followed', [BookFollowController::class, 'getFollowedBooksByU
 Route::post('/books/follow', [BookFollowController::class, 'follow']);
 Route::delete('/books/unfollow', [BookFollowController::class, 'unfollow']);
 Route::get('/books/check-follow', [BookFollowController::class, 'checkFollowStatus']);
+
+
+Route::prefix('banners')->group(function () {
+    Route::get('/', [BannerController::class, 'index']);          // GET /api/banners
+    Route::post('/', [BannerController::class, 'store']);         // POST /api/banners
+    Route::get('/{id}', [BannerController::class, 'show']);       // GET /api/banners/{id}
+    Route::put('/{id}', [BannerController::class, 'update']);     // PUT /api/banners/{id}
+    Route::delete('/{id}', [BannerController::class, 'destroy']); // DELETE /api/banners/{id}
+});
+
+
+// Rating routes - yêu cầu authentication
+Route::middleware('auth:api')->group(function () {
+    // Tạo hoặc cập nhật rating
+    Route::post('/ratings', [RatingController::class, 'store']);
+    
+    // Lấy rating của user cho một sách cụ thể
+    Route::get('/ratings/book/{bookId}', [RatingController::class, 'getUserRating']);
+    
+    // Lấy tất cả ratings của user hiện tại
+    Route::get('/ratings/my-ratings', [RatingController::class, 'getUserRatings']);
+    
+    // Xóa rating của user cho một sách
+    Route::delete('/ratings/book/{bookId}', [RatingController::class, 'destroy']);
+  
+});
+
+// Public route - không cần authentication
+Route::get('/ratings/book/{bookId}/stats', [RatingController::class, 'getBookRatingStats']);
+  Route::get('/ratings/book/{bookId}/filter', [RatingController::class, 'getRatingsByStar']);
 
 // Quan trọng: đặt sau cùng để tránh nuốt route
 Route::get('/books/{id}', [BookController::class, 'show']);
