@@ -40,7 +40,17 @@
                         href="{{ route('admin.tags.index') }}">📌 Thẻ sách
                     </a>
                 </li>
-
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white {{ request()->is('admin/users*') ? 'active bg-secondary' : '' }}"
+                        href="{{ route('admin.users.index') }}">👤 Người dùng
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white {{ request()->is('admin/vouchers*') ? 'active bg-secondary' : '' }}"
+                        href="{{ route('admin.vouchers.index') }}">
+                        🎁 Voucher
+                    </a>
+                </li>
             </ul>
         </nav>
 

@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('vouchers', function (Blueprint $table) {
             $table->id();
-
             $table->string('code')->unique();                         // Mã giảm giá
             $table->decimal('discount_value', 10, 2);                 // Giá trị giảm (theo % hoặc số tiền)
             $table->enum('discount_type', ['percentage', 'fixed']);   // Kiểu giảm: phần trăm hoặc cố định

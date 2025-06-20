@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -9,10 +10,10 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $users = User::where('role', 'user')
-            ->when($request->filled('keyword'), function ($query) use ($request) {
-                $query->where('name', 'like', "%{$request->keyword}%")
-                      ->orWhere('email', 'like', "%{$request->keyword}%");
+        $users = User::query()
+            ->when($request->keyword, function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->keyword . '%')
+                    ->orWhere('email', 'like', '%' . $request->keyword . '%');
             })
             ->orderByDesc('id')
             ->paginate(10);
@@ -27,22 +28,24 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $data = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
-            'is_hidden' => 'required|boolean',
+            'role' => 'required|in:user,admin',
         ]);
 
-        $user->update($data);
+        $user->update($request->only(['name', 'phone', 'address', 'role']));
 
-        return redirect()->route('admin.users.index')->with('success', 'Cập nhật người dùng thành công!');
+        return redirect()->route('admin.users.index')->with('success', 'Cập nhật người dùng thành công.');
     }
 
-    public function destroy(User $user)
-    {
-        $user->delete();
 
-        return redirect()->back()->with('success', 'Xóa người dùng thành công!');
+    public function toggle(User $user)
+    {
+        $user->is_hidden = !$user->is_hidden;
+        $user->save();
+
+        return redirect()->route('admin.users.index')->with('success', 'Cập nhật trạng thái thành công.');
     }
 }
