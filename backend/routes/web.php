@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\AuthorController;
-use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\BookCategoryController;
 use App\Http\Controllers\Admin\BookController;
 use App\Http\Controllers\Admin\BookViewController;
