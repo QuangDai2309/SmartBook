@@ -27,7 +27,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('book_categories', BookCategoryController::class);
     Route::resource('tags', TagController::class);
     Route::resource('books', BookController::class);
-    Route::resource('banners', BannerController::class);
     Route::resource('vouchers', VoucherController::class);
 });
 Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
