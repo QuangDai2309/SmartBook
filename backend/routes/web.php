@@ -17,7 +17,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PublisherController;
 
 // Auth
-use App\Http\Controllers\Auth\GoogleController; 
+use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\ProfileController;
 
 // Trang chủ
@@ -42,15 +42,7 @@ Route::get('api/followed-books', [BookFollowController::class, 'getFollowedBooks
 Route::post('api/books/follow', [BookFollowController::class, 'follow']);
 Route::post('api/books/unfollow', [BookFollowController::class, 'unfollow']);
 
-// ===================== Admin Routes =====================
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('authors', AuthorController::class);
-    Route::resource('publishers', PublisherController::class);
-    Route::resource('categories', CategoryController::class);
-    Route::resource('books', AdminBookController::class);
-    Route::resource('banners', BannerController::class);
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-});
+
 
 // ===================== Auth & Google Login =====================
 Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
