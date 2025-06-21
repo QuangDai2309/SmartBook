@@ -2,30 +2,56 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\Admin\AuthorController;
-use App\Http\Controllers\Admin\BookCategoryController;
-use App\Http\Controllers\Admin\BookController;
-use App\Http\Controllers\Admin\BookViewController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\PublisherController;
-use App\Http\Controllers\Admin\TagController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\VoucherController;
+// Home (User-side) Controllers
+use App\Http\Controllers\Home\BookController as HomeBookController;
+use App\Http\Controllers\Home\BuybookController;
+use App\Http\Controllers\Home\EbookController;
+use App\Http\Controllers\Home\BookFollowController;
 
+
+// Auth
+use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\ProfileController;
+
+// Trang chủ
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Admin routes
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('users', UserController::class);
-    Route::get('book_views', [BookViewController::class, 'index'])->name('book_views.index');
-    Route::patch('users/{user}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
-    Route::resource('authors', AuthorController::class);
-    Route::resource('publishers', PublisherController::class);
-    Route::resource('book_categories', BookCategoryController::class);
-    Route::resource('tags', TagController::class);
-    Route::resource('books', BookController::class);
-    Route::resource('vouchers', VoucherController::class);
+// ===================== Home APIs =====================
+Route::get('api/books', [HomeBookController::class, 'index']);
+Route::get('api/books/{id}', [HomeBookController::class, 'show']);
+Route::get('api/ebooks', [EbookController::class, 'Ebooks']);
+Route::get('api/buyBooks', [BuybookController::class, 'buyBooks']);
+Route::resource('books', HomeBookController::class);
+
+// Test API
+Route::get('/test-api', function () {
+    return response()->json(['message' => 'OK']);
 });
-Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+
+// ===================== API Book Follow =====================
+Route::get('api/followed-books', [BookFollowController::class, 'getFollowedBooksByUser']);
+Route::post('api/books/follow', [BookFollowController::class, 'follow']);
+Route::post('api/books/unfollow', [BookFollowController::class, 'unfollow']);
+
+
+
+// ===================== Auth & Google Login =====================
+Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
+Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+
+// ===================== Dashboard (User) =====================
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+// ===================== User Profile =====================
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Auth scaffolding
+require __DIR__.'/auth.php';
