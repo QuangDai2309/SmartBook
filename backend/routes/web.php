@@ -8,13 +8,6 @@ use App\Http\Controllers\Home\BuybookController;
 use App\Http\Controllers\Home\EbookController;
 use App\Http\Controllers\Home\BookFollowController;
 
-// Admin Controllers
-use App\Http\Controllers\Admin\AuthorController;
-use App\Http\Controllers\Admin\BannerController;
-use App\Http\Controllers\Admin\BookController as AdminBookController;
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\PublisherController;
 
 // Auth
 use App\Http\Controllers\Auth\GoogleController;
