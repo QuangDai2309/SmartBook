@@ -12,15 +12,17 @@ return new class extends Migration {
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 100);
-            $table->string('email', 100)->unique();
-            $table->string('phone', 20)->nullable();        // Thêm số điện thoại
-            $table->string('password', 255);
-            $table->string('avatar', 255)->nullable();      // Thêm ảnh đại diện
-            $table->string('otp_secret', 100)->nullable();  // Thêm mã OTP bí mật
-            $table->timestamp('email_verified_at')->nullable();
-            $table->rememberToken();
-            $table->timestamps();
+            $table->string('name');                          // Tên người dùng
+            $table->string('email')->unique();               // Email duy nhất
+            $table->timestamp('email_verified_at')->nullable(); // Thời gian xác thực email
+            $table->string('password');                      // Mật khẩu đã mã hoá
+            $table->string('avatar')->nullable();            // Ảnh đại diện người dùng
+            $table->string('phone')->nullable();             // Số điện thoại
+            $table->string('address')->nullable();           // Địa chỉ
+            $table->enum('role', ['user', 'admin'])->default('user'); // Vai trò
+            $table->boolean('is_hidden')->default(true);     // Kích hoạt tài khoản
+            $table->rememberToken();                         // Token cho chức năng "ghi nhớ đăng nhập"
+            $table->timestamps();                            // created_at & updated_at
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

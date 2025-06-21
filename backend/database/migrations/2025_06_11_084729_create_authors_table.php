@@ -13,8 +13,9 @@ return new class extends Migration {
         Schema::create('authors', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
+            $table->boolean('is_hidden')->default(true); // Trạng thái ẩn/hiện
+            $table->timestamps();
         });
-
     }
 
     /**

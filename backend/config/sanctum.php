@@ -1,4 +1,3 @@
-
 <?php
 
 use Laravel\Sanctum\Sanctum;
@@ -22,7 +21,6 @@ return [
         Sanctum::currentApplicationUrlWithPort(),
         // Sanctum::currentRequestHost(),
     ))),
-   
 
     /*
     |--------------------------------------------------------------------------
@@ -84,5 +82,3 @@ return [
     ],
 
 ];
-            
-

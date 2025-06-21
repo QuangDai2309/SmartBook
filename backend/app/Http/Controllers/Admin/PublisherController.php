@@ -3,24 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Publisher;
 use Illuminate\Http\Request;
+use App\Models\Publisher;
 
 class PublisherController extends Controller
 {
     public function index(Request $request)
-{
-    $query = Publisher::query();
+    {
+        $keyword = $request->input('keyword');
+        $publishers = Publisher::when($keyword, function ($query, $keyword) {
+                $query->where('name', 'like', "%$keyword%");
+            })
+            ->orderByDesc('created_at')
+            ->paginate(10);
 
-    if ($request->has('search')) {
-        $query->where('name', 'like', '%' . $request->search . '%');
+        return view('admin.publishers.index', compact('publishers', 'keyword'));
     }
-
-    $publishers = $query->orderBy('name')->paginate(10); // dùng paginate, không phải get()
-
-    return view('admin.publishers.index', compact('publishers'));
-}
-
 
     public function create()
     {
@@ -29,13 +27,16 @@ class PublisherController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|max:100'
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
         ]);
 
-        Publisher::create($request->only('name'));
+        Publisher::create([
+            'name' => $validated['name'],
+            'is_hidden' => $request->has('is_hidden'),
+        ]);
 
-        return redirect()->route('admin.publishers.index')->with('success', 'Nhà xuất bản đã được thêm.');
+        return redirect()->route('admin.publishers.index')->with('success', 'Thêm NXB thành công!');
     }
 
     public function edit(Publisher $publisher)
@@ -45,19 +46,22 @@ class PublisherController extends Controller
 
     public function update(Request $request, Publisher $publisher)
     {
-        $request->validate([
-            'name' => 'required|max:100'
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
         ]);
 
-        $publisher->update($request->only('name'));
+        $publisher->update([
+            'name' => $validated['name'],
+            'is_hidden' => $request->has('is_hidden'),
+        ]);
 
-        return redirect()->route('admin.publishers.index')->with('success', 'Nhà xuất bản đã được cập nhật.');
+        return redirect()->route('admin.publishers.index')->with('success', 'Cập nhật NXB thành công!');
     }
 
     public function destroy(Publisher $publisher)
     {
         $publisher->delete();
 
-        return redirect()->route('admin.publishers.index')->with('success', 'Nhà xuất bản đã bị xóa.');
+        return redirect()->route('admin.publishers.index')->with('success', 'Xóa NXB thành công!');
     }
 }
