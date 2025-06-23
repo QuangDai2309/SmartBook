@@ -6,8 +6,9 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken as Middleware;
 
 class VerifyCsrfToken extends Middleware
 {
-   protected $except = [
-    'api/*',  
-];
-
+    protected $except = [
+        'http://127.0.0.1:8000/api/books/follow',
+        'api/*',
+        '/api/*',  // Thêm dòng này
+    ];
 }

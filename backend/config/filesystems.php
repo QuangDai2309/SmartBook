@@ -60,6 +60,17 @@ return [
             'report' => false,
         ],
 
+        // Thêm cấu hình Cloudinary ở đây
+        'cloudinary' => [
+            'driver' => 'cloudinary',
+            'url' => env('CLOUDINARY_URL'),
+            'cloud' => env('CLOUDINARY_CLOUD_NAME'),
+            'key' => env('CLOUDINARY_API_KEY'),
+            'secret' => env('CLOUDINARY_API_SECRET'),
+            'secure' => true,
+            'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
+        ],
+
     ],
 
     /*

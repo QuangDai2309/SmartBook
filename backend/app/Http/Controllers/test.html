@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Rating API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .endpoint-section {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .endpoint-title {
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌟 Test Rating API</h1>
+        
+        <!-- CREATE/UPDATE RATING -->
+        <div class="endpoint-section">
+            <h2 class="endpoint-title">POST /api/ratings - Create/Update Rating</h2>
+            <div class="form-group">
+                <label for="token">Bearer Token:</label>
+                <input type="text" id="token" placeholder="Enter your Bearer token">
+            </div>
+            <div class="form-group">
+                <label for="bookId">Book ID:</label>
+                <input type="number" id="bookId" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label for="ratingStar">Rating Star:</label>
+                <select id="ratingStar">
+                    <option value="0.5">0.5 ⭐</option>
+                    <option value="1">1.0 ⭐</option>
+                    <option value="1.5">1.5 ⭐</option>
+                    <option value="2">2.0 ⭐</option>
+                    <option value="2.5">2.5 ⭐</option>
+                    <option value="3">3.0 ⭐</option>
+                    <option value="3.5">3.5 ⭐</option>
+                    <option value="4">4.0 ⭐</option>
+                    <option value="4.5" selected>4.5 ⭐</option>
+                    <option value="5">5.0 ⭐</option>
+                </select>
+            </div>
+            <button onclick="createRating()">Submit Rating</button>
+        </div>
+
+        <!-- GET BOOK STATS -->
+        <div class="endpoint-section">
+            <h2 class="endpoint-title">GET /api/ratings/book/{id}/stats - Get Book Rating Stats</h2>
+            <div class="form-group">
+                <label for="statsBookId">Book ID for Stats:</label>
+                <input type="number" id="statsBookId" value="1" min="1">
+            </div>
+            <button onclick="getBookStats()">Get Book Stats</button>
+        </div>
+
+        <!-- GET USER RATING -->
+        <div class="endpoint-section">
+            <h2 class="endpoint-title">GET /api/ratings/book/{id} - Get User Rating</h2>
+            <div class="form-group">
+                <label for="userRatingBookId">Book ID:</label>
+                <input type="number" id="userRatingBookId" value="1" min="1">
+            </div>
+            <button onclick="getUserRating()">Get My Rating</button>
+        </div>
+
+        <!-- GET ALL USER RATINGS -->
+        <div class="endpoint-section">
+            <h2 class="endpoint-title">GET /api/ratings/my-ratings - Get All My Ratings</h2>
+            <button onclick="getAllUserRatings()">Get All My Ratings</button>
+        </div>
+
+        <!-- DELETE RATING -->
+        <div class="endpoint-section">
+            <h2 class="endpoint-title">DELETE /api/ratings/book/{id} - Delete Rating</h2>
+            <div class="form-group">
+                <label for="deleteBookId">Book ID to Delete:</label>
+                <input type="number" id="deleteBookId" value="1" min="1">
+            </div>
+            <button onclick="deleteRating()" style="background-color: #dc3545;">Delete Rating</button>
+        </div>
+
+        <div id="response"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+        
+        function showResponse(data, isError = false) {
+            const responseDiv = document.getElementById('response');
+            responseDiv.innerHTML = JSON.stringify(data, null, 2);
+            responseDiv.className = `response ${isError ? 'error' : 'success'}`;
+        }
+
+        function getAuthHeaders() {
+            const token = document.getElementById('token').value.trim();
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            return headers;
+        }
+
+        async function createRating() {
+            try {
+                const bookId = document.getElementById('bookId').value;
+                const ratingStar = parseFloat(document.getElementById('ratingStar').value);
+                
+                const response = await fetch(`${API_BASE}/ratings`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        book_id: parseInt(bookId),
+                        rating_star: ratingStar
+                    })
+                });
+                
+                const data = await response.json();
+                showResponse({
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: data
+                }, !response.ok);
+                
+            } catch (error) {
+                showResponse({error: error.message}, true);
+            }
+        }
+
+        async function getBookStats() {
+            try {
+                const bookId = document.getElementById('statsBookId').value;
+                
+                const response = await fetch(`${API_BASE}/ratings/book/${bookId}/stats`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                showResponse({
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: data
+                }, !response.ok);
+                
+            } catch (error) {
+                showResponse({error: error.message}, true);
+            }
+        }
+
+        async function getUserRating() {
+            try {
+                const bookId = document.getElementById('userRatingBookId').value;
+                
+                const response = await fetch(`${API_BASE}/ratings/book/${bookId}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                showResponse({
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: data
+                }, !response.ok);
+                
+            } catch (error) {
+                showResponse({error: error.message}, true);
+            }
+        }
+
+        async function getAllUserRatings() {
+            try {
+                const response = await fetch(`${API_BASE}/ratings/my-ratings`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                showResponse({
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: data
+                }, !response.ok);
+                
+            } catch (error) {
+                showResponse({error: error.message}, true);
+            }
+        }
+
+        async function deleteRating() {
+            if (!confirm('Are you sure you want to delete this rating?')) {
+                return;
+            }
+            
+            try {
+                const bookId = document.getElementById('deleteBookId').value;
+                
+                const response = await fetch(`${API_BASE}/ratings/book/${bookId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                showResponse({
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: data
+                }, !response.ok);
+                
+            } catch (error) {
+                showResponse({error: error.message}, true);
+            }
+        }
+
+        // Test connection on load
+        window.onload = function() {
+            fetch(`${API_BASE}/ratings/book/1/stats`, {
+                headers: {'Accept': 'application/json'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('API connection test successful:', data);
+            })
+            .catch(error => {
+                console.error('API connection test failed:', error);
+            });
+        };
+    </script>
+</body>
+</html>
