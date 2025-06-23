@@ -15,7 +15,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.books.store') }}" method="POST">
+    <form action="{{ route('admin.books.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         <div class="mb-3">
@@ -71,11 +71,18 @@
             <textarea name="description" class="form-control my-editor">{{ old('description') }}</textarea>
         </div>
 
+        <div class="mb-3">
+            <label>Ảnh sách (upload nhiều ảnh)</label>
+            <input type="file" name="images[]" class="form-control" multiple>
+            <small class="text-muted">Bạn có thể chọn nhiều ảnh, ảnh đầu tiên sẽ là ảnh chính.</small>
+        </div>
+
         <button class="btn btn-success">💾 Lưu</button>
         <a href="{{ route('admin.books.index') }}" class="btn btn-secondary">⬅️ Quay lại</a>
     </form>
 </div>
-@endsection
+@endsection 
+
 @push('scripts')
 <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 <script>

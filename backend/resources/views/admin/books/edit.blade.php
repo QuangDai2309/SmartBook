@@ -4,6 +4,11 @@
 <div class="container mt-5">
     <h1 class="mb-4">✏️ Chỉnh sửa sách</h1>
 
+    {{-- Hiển thị thông báo --}}
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
     {{-- Hiển thị lỗi --}}
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -15,7 +20,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.books.update', $book) }}" method="POST">
+    <form action="{{ route('admin.books.update', $book) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -72,11 +77,47 @@
             <textarea name="description" class="form-control my-editor">{{ old('description', $book->description) }}</textarea>
         </div>
 
-        <button class="btn btn-primary">💾 Cập nhật</button>
+        {{-- Ảnh hiện tại --}}
+        @if ($book->images->count())
+        <div class="mb-3">
+            <label>Ảnh hiện tại</label>
+            <div class="d-flex flex-wrap gap-3">
+                @foreach ($book->images as $image)
+                    <div class="border rounded p-2 text-center">
+                        <img src="{{ $image->image_url }}" alt="{{ $image->alt_text }}" width="120" class="img-thumbnail mb-1">
+
+                        @if ($image->is_main)
+                            <span class="badge bg-primary d-block mb-1">Ảnh chính</span>
+                        @else
+                            <form action="{{ route('admin.books.set-main-image', $image) }}" method="POST" class="mb-1">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Đặt làm chính</button>
+                            </form>
+                        @endif
+
+                        <form action="{{ route('admin.books.delete-image', $image) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Xoá</button>
+                        </form>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- Upload ảnh mới --}}
+        <div class="mb-3">
+            <label>Thêm ảnh mới (tùy chọn)</label>
+            <input type="file" name="images[]" class="form-control" multiple>
+        </div>
+
+        <button type="submit" class="btn btn-primary">📏 Cập nhật</button>
         <a href="{{ route('admin.books.index') }}" class="btn btn-secondary">⬅️ Quay lại</a>
     </form>
 </div>
 @endsection
+
 @push('scripts')
 <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 <script>

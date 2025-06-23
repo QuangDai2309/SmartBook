@@ -3,78 +3,47 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Tymon\JWTAuth\Facades\JWTAuth; // Nếu dùng JWT
+use Illuminate\Support\Str;
+
 
 class GoogleController extends Controller
 {
-    public function redirectToGoogle()
+    public function loginWithGoogle(Request $request)
     {
-        // Dùng stateless để không cần session
-        return Socialite::driver('google')->stateless()->redirect();
-    }
+        $request->validate([
+            'token' => 'required|string',
+        ]);
 
-    // public function handleGoogleCallback()
-    // {
-    //     try {
-    //         // Lấy thông tin user từ Google
-    //         $googleUser = Socialite::driver('google')->stateless()->user();
+        $google_token = $request->token;
 
-    //         // Tìm hoặc tạo mới user trong hệ thống
-    //         $user = User::firstOrCreate(
-    //             ['email' => $googleUser->getEmail()],
-    //             [
-    //                 'name' => $googleUser->getName(),
-    //                 'google_id' => $googleUser->getId(),
-    //                 'password' => bcrypt(uniqid()), // mật khẩu ngẫu nhiên nếu user mới
-    //             ]
-    //         );
+        $client = new \Google_Client(['client_id' => config('services.google.client_id')]);
+        $payload = $client->verifyIdToken($google_token);
 
-    //         // Đăng nhập user và tạo JWT token
-    //         $token = Auth::login($user);
+        if (!$payload) {
+            return response()->json(['message' => 'Token Google không hợp lệ'], 401);
+        }
 
-    //         // Trả về token cho frontend
-    //         return response()->json([
-    //             'status' => true,
-    //             'access_token' => $token,
-    //             'token_type' => 'bearer',
-    //             'expires_in' => Auth::factory()->getTTL() * 60,
-    //             'user' => $user,
-    //         ]);
-
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Google login failed: ' . $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
-    public function handleGoogleCallback()
-{
-    try {
-        $googleUser = Socialite::driver('google')->stateless()->user();
-
+        // Xác định user qua email
         $user = User::firstOrCreate(
-            ['email' => $googleUser->getEmail()],
+            ['email' => $payload['email']],
             [
-                'name' => $googleUser->getName(),
-                'google_id' => $googleUser->getId(),
-                'password' => bcrypt(uniqid()),
+                'name' => $payload['name'] ?? '',
+                'password' => bcrypt(Str::random(12)), // tạo tạm
+                'role' => 'user' // mặc định user thường
             ]
         );
 
-        $token = Auth::login($user);
+        // Đăng nhập và tạo token
+        $token = JWTAuth::fromUser($user);
 
-        // Redirect đến trang trung gian (để xử lý token phía client)
-        return redirect()->to('/api/google-redirect?access_token=' . $token);
-    } catch (\Exception $e) {
         return response()->json([
-            'status' => false,
-            'message' => 'Google login failed: ' . $e->getMessage()
-        ], 500);
+            'message' => 'Đăng nhập thành công',
+            'token' => $token,
+            'user' => $user
+        ]);
     }
-}
-
 }

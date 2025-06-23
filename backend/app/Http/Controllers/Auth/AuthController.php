@@ -1,10 +1,10 @@
 <?php
 namespace App\Http\Controllers\Auth;
-
+\Illuminate\Support\Facades\Log::info('Token gửi về:', [$request->token]);
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Facades\JWTAuth;  
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;

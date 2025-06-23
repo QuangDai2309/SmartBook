@@ -1,5 +1,6 @@
 'use client';
-
+import { GoogleLogin } from '@react-oauth/google';
+import { apiLoginWithGoogle } from '../../../../apis/user';
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Modal, Card, Typography, Space, Divider } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
@@ -31,28 +32,37 @@ useEffect(() => {
   // Function để switch mode và update URL
 
   const onFinish = async (values) => {
-    setLoading(true);
-    try {
-      if (isLogin) {
-        const data = await apiLoginUser(values.email, values.password);
-        localStorage.setItem('token', data.access_token);
-        setNotify({ type: 'success', message: 'Đăng nhập thành công!' });
-        
-        // Redirect after showing success message
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 1500);
-      } else {
-        await apiRegisterUser(values.name, values.email, values.password, values.password_confirmation);
-        setNotify({ type: 'success', message: 'Đăng ký thành công, hãy đăng nhập!' });
-        setIsLogin(true);
-      }
-    } catch (error) {
-      setNotify({ type: 'error', message: error.message });
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  try {
+    
+    if (isLogin) {
+      const data = await apiLoginUser(values.email, values.password);
+
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      setNotify({ type: 'success', message: 'Đăng nhập thành công!' });
+
+      setTimeout(() => {
+        if (data.user.role === 'admin') {
+          window.location.href = 'http://localhost:8000/admin/dashboard'; // Chuyển qua Laravel admin
+        } else {
+          router.push('/'); // Vẫn ở frontend
+        }
+
+      }, 1000);
+    } else {
+      await apiRegisterUser(values.name, values.email, values.password, values.password_confirmation);
+      setNotify({ type: 'success', message: 'Đăng ký thành công, hãy đăng nhập!' });
+      setIsLogin(true);
     }
-  };
+  } catch (error) {
+    setNotify({ type: 'error', message: error.message });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleForgotPassword = async (values) => {
     setForgotLoading(true);
@@ -512,15 +522,42 @@ useEffect(() => {
                 )}
 
                 <Form.Item>
-                  <Button 
-                    type="primary" 
-                    htmlType="submit" 
-                    className="submit-btn"
-                    loading={loading}
-                  >
-                    {isLogin ? '🔑 Đăng nhập' : '📝 Đăng ký'}
-                  </Button>
-                </Form.Item>
+  <Button 
+    type="primary" 
+    htmlType="submit" 
+    className="submit-btn"
+    loading={loading}
+  >
+    {isLogin ? '🔑 Đăng nhập' : '📝 Đăng ký'}
+  </Button>
+</Form.Item>
+
+{/* Thêm đoạn GoogleLogin tại đây */}
+{isLogin && (
+  <div style={{ marginTop: '16px', textAlign: 'center' }}>
+    <p>Hoặc</p>
+    <GoogleLogin
+      onSuccess={async credentialResponse => {
+        try {
+          const res = await apiLoginWithGoogle(credentialResponse.credential);
+          localStorage.setItem('token', res.token);
+          localStorage.setItem('user', JSON.stringify(res.user));
+
+          if (res.user.role === 'admin') {
+            window.location.href = '/admin/dashboard';
+          } else {
+            window.location.href = '/';
+          }
+        } catch (err) {
+          alert(err.message);
+        }
+      }}
+      onError={() => alert('Đăng nhập Google thất bại!')}
+    />
+  </div>
+)}
+
+
               </Form>
             </div>
 
