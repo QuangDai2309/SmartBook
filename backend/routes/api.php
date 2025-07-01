@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\Home\PostController;
 
 // Lấy thông tin user bằng sanctum (nếu dùng Sanctum thôi)
 Route::get('/user', function (Request $request) {
@@ -129,3 +130,11 @@ Route::apiResource('coupons', CouponController::class);
 Route::post('/coupons/check', [CouponController::class, 'check']);
 Route::get('/coupons/get', [CouponController::class, 'show']);
 // Route lấy danh sách mã giảm giá cho người dùng
+
+
+// Post 
+Route::prefix('home')->group(function () {
+    Route::get('posts/{id}', [PostController::class, 'show']);
+    Route::post('posts', [PostController::class, 'store']);
+    Route::put('posts/{id}', [PostController::class, 'update']);
+});
