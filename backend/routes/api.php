@@ -69,10 +69,10 @@ Route::prefix('group-orders')->group(function () {
         Route::post('/{token}/lock', [GroupOrderController::class, 'lock']);
         Route::post('/{token}/settlements/recalc', [GroupOrderController::class, 'recalc']);
 
-        // NEW: tạo link thanh toán + gửi mail
-        Route::post('/{token}/settlements/paylinks', [GroupOrderController::class, 'createPayLinks']); // NEW
+        // tạo link thanh toán + gửi mail
+        Route::post('/{token}/settlements/paylinks', [GroupOrderController::class, 'createPayLinks']);
 
-        // (giữ nếu cần)
+        // checkout: COD hoặc khi đã đủ tiền tất cả
         Route::post('/{token}/checkout', [GroupOrderController::class, 'checkout']);
 
         // members
@@ -81,13 +81,15 @@ Route::prefix('group-orders')->group(function () {
         Route::delete('/{token}/leave', [GroupOrderController::class, 'leave']);
     });
 
-    // NEW: IPN/Return (không cần auth)
-    Route::post('/payments/momo/ipn',   [GroupOrderController::class, 'momoIpn']);     // NEW
-    Route::get ('/payments/vnpay/return',[GroupOrderController::class, 'vnpayReturn']); // NEW
-    // Nếu m muốn IPN riêng cho VNPay:
-    // Route::post('/payments/vnpay/ipn', [GroupOrderController::class, 'vnpayIpn']);
-});
+    // IPN/Return (local chủ yếu dùng Return)
+    Route::post('/payments/momo/ipn',    [GroupOrderController::class, 'momoIpn']); // sẽ không được gọi ở local, giữ cho đủ
+    Route::get ('/payments/momo/return', [GroupOrderController::class, 'momoReturn']); // ⬅️ dùng khi dev local
+    Route::get ('/payments/vnpay/return',[GroupOrderController::class, 'vnpayReturn']);
 
+    // tiện theo dõi trạng thái & đồng bộ local
+    Route::get ('/{token}/status',        [GroupOrderController::class, 'status']);
+    Route::post('/{token}/payments/sync', [GroupOrderController::class, 'syncPendingPayments']);
+});
 
 Route::prefix('admin')->name('admin.')->group(function () {
 
@@ -248,9 +250,10 @@ Route::middleware(['auth:api'])->post('/orders', [OrderController::class, 'store
 
 // Các route cần token bảo mật
 Route::middleware(['auth:api'])->group(function () {
-    // Đơn hàng
+
+    // Đơn hàng user
     Route::get('/orders', [OrderController::class, 'index']);
-    Route::get('/admin/orders', [OrderController::class, 'getAllOrders']);
+    Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/stats', [OrderController::class, 'getOrderStats']);
     Route::get('/orders/stats/summary', [OrderController::class, 'getOrderStats']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
@@ -258,8 +261,13 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancelOrder']);
     Route::post('/orders/{orderId}/shipping', [OrderController::class, 'createShipping']);
     Route::get('/orders/{id}/shipping-info', [OrderController::class, 'getShippingInfo']);
-    Route::post('/webhook/ghn/shipping-status', [OrderController::class, 'updateShippingStatus']);
     Route::get('/orders/{orderId}/sync-status', [OrderController::class, 'syncOrderStatusFromGHN']);
+
+    // Admin
+    Route::get('/admin/orders', [OrderController::class, 'getAllOrders']);
+
+// Webhook KHÔNG auth (để GHN gọi vào)
+Route::post('/webhook/ghn/shipping-status', [OrderController::class, 'updateShippingStatus']);
 
     // Giỏ hàng
     Route::prefix('cart')->group(function () {
@@ -795,7 +803,6 @@ Route::prefix('revenue')->group(function () {
 //     Route::put('/books/{book_id}', [EventProductController::class, 'update']);
 //     Route::delete('/books/{book_id}', [EventProductController::class, 'destroy']);
 // });
-
 
 
 
