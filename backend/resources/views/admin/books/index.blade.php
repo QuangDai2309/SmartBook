@@ -564,7 +564,7 @@
 
     <!-- Action Buttons -->
     <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
-        <a href="http://localhost:8000/api/books/template/download" 
+        <a href="http://smartbook.io.vn/api/books/template/download" 
            title="Tải xuống file mẫu Excel"
            style="display: inline-flex; align-items: center; gap: 6px; background-color: #4CAF50; color: white; text-decoration: none; padding: 8px 14px; border-radius: 5px; font-size: 14px; font-weight: 500; transition: background-color 0.3s; cursor: pointer;">
             <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 16 16">
@@ -1037,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 200);
         
         // Make API call
-        fetch('http://localhost:8000/api/books/import', {
+        fetch('http://smartbook.io.vn/api/books/import', {
             method: 'POST',
             body: formData,
             headers: {

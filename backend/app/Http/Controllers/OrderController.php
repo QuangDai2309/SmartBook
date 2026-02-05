@@ -26,13 +26,13 @@ class OrderController extends Controller
 
     // Định nghĩa các trạng thái hợp lệ
     private $validStatuses = [
-        'pending' => 'Chờ xử lý',
+        'pending'       => 'Chờ xử lý',
         'ready_to_pick' => 'Chờ lấy hàng',
-        'picking' => 'Đang lấy hàng',
-        'picked' => 'Đã lấy hàng',
-        'delivering' => 'Đang giao hàng',
-        'delivered' => 'Đã giao hàng',
-        'cancelled' => 'Đã hủy'
+        'picking'       => 'Đang lấy hàng',
+        'picked'        => 'Đã lấy hàng',
+        'delivering'    => 'Đang giao hàng',
+        'delivered'     => 'Đã giao hàng',
+        'cancelled'     => 'Đã hủy'
     ];
 
     public function store(Request $request): JsonResponse
@@ -51,6 +51,7 @@ class OrderController extends Controller
             'shipping_fee' => 'nullable|numeric|min:0',
             'total_price' => 'nullable|numeric|min:0',
             'note' => 'nullable|string|max:500',
+            'phone' => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -61,12 +62,11 @@ class OrderController extends Controller
             ], 422);
         }
 
-        $user = Auth::user();
-
-        if (!$user) {
+        $user = Auth::guard('api')->user();
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Người dùng chưa đăng nhập.'
+                'message' => 'Bạn cần đăng nhập'
             ], 401);
         }
 
@@ -77,7 +77,8 @@ class OrderController extends Controller
             // Lấy cart
             $cart = Cart::where('user_id', $user->id)->first();
 
-            if (!$cart) {
+            if (! $cart) {
+                DB::rollBack();
                 return response()->json([
                     'success' => false,
                     'message' => 'Không tìm thấy giỏ hàng.'
@@ -90,6 +91,7 @@ class OrderController extends Controller
                 ->get();
 
             if ($cartItems->isEmpty()) {
+                DB::rollBack();
                 return response()->json([
                     'success' => false,
                     'message' => 'Không có sản phẩm nào được chọn.'
@@ -97,9 +99,7 @@ class OrderController extends Controller
             }
 
             // Tính tổng tiền các item được chọn
-            $total = $cartItems->sum(function ($item) {
-                return $item->quantity * $item->price;
-            });
+            $total = $cartItems->sum(fn($item) => $item->quantity * $item->price);
 
             // Ghép địa chỉ từ các trường
             $address = 'Số ' . $request->input('sonha') . ', '
@@ -109,7 +109,7 @@ class OrderController extends Controller
 
             $shippingFee = $request->input('shipping_fee', 0);
             $totalPrice = $request->input('total_price', $total + $shippingFee);
-            
+
             // Tạo order_code theo format: ddmmyystt
             $orderCode = $this->generateOrderCode();
 
@@ -135,7 +135,7 @@ class OrderController extends Controller
             ]);
 
             Log::info('Order created successfully', [
-                'order_id' => $order->id, 
+                'order_id' => $order->id,
                 'order_code' => $order->order_code,
                 'user_id' => $user->id
             ]);
@@ -144,7 +144,7 @@ class OrderController extends Controller
             foreach ($cartItems as $item) {
                 $book = $item->book;
 
-                if (!$book) {
+                if (! $book) {
                     DB::rollBack();
                     Log::error('Book not found for cart item', ['cart_item_id' => $item->id]);
                     return response()->json([
@@ -168,8 +168,7 @@ class OrderController extends Controller
                 }
 
                 // Trừ stock
-                $book->stock -= $item->quantity;
-                $book->save();
+                $book->decrement('stock', $item->quantity);
 
                 // Tạo order item
                 OrderItem::create([
@@ -222,7 +221,7 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Order creation failed', [
-                'user_id' => $user->id,
+                'user_id' => optional(Auth::guard('api')->user())->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -241,8 +240,11 @@ class OrderController extends Controller
     public function updateOrderStatus(Request $request, $orderId): JsonResponse
     {
         try {
-            $user = Auth::user();
-            
+            $user = Auth::guard('api')->user();
+            if (! $user) {
+                return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập'], 401);
+            }
+
             // Validate status
             $validator = Validator::make($request->all(), [
                 'status' => 'required|string|in:' . implode(',', array_keys($this->validStatuses))
@@ -259,7 +261,7 @@ class OrderController extends Controller
 
             $order = Order::find($orderId);
 
-            if (!$order) {
+            if (! $order) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Không tìm thấy đơn hàng'
@@ -271,7 +273,7 @@ class OrderController extends Controller
 
             // Kiểm tra logic business cho việc chuyển trạng thái
             $statusChangeResult = $this->validateStatusChange($oldStatus, $newStatus);
-            if (!$statusChangeResult['allowed']) {
+            if (! $statusChangeResult['allowed']) {
                 return response()->json([
                     'success' => false,
                     'message' => $statusChangeResult['message']
@@ -327,7 +329,7 @@ class OrderController extends Controller
     {
         // Các trạng thái cuối không thể chuyển đổi
         $finalStatuses = ['delivered', 'cancelled'];
-        
+
         if (in_array($oldStatus, $finalStatuses)) {
             return [
                 'allowed' => false,
@@ -337,16 +339,16 @@ class OrderController extends Controller
 
         // Logic chuyển đổi trạng thái
         $allowedTransitions = [
-            'pending' => ['ready_to_pick', 'cancelled'],
+            'pending'       => ['ready_to_pick', 'cancelled'],
             'ready_to_pick' => ['picking', 'cancelled'],
-            'picking' => ['picked', 'cancelled'],
-            'picked' => ['delivering', 'cancelled'],
-            'delivering' => ['delivered', 'cancelled'],
-            'delivered' => [], // Trạng thái cuối
-            'cancelled' => [] // Trạng thái cuối
+            'picking'       => ['picked', 'cancelled'],
+            'picked'        => ['delivering', 'cancelled'],
+            'delivering'    => ['delivered', 'cancelled'],
+            'delivered'     => [],
+            'cancelled'     => []
         ];
 
-        if (!isset($allowedTransitions[$oldStatus]) || !in_array($newStatus, $allowedTransitions[$oldStatus])) {
+        if (! isset($allowedTransitions[$oldStatus]) || ! in_array($newStatus, $allowedTransitions[$oldStatus])) {
             return [
                 'allowed' => false,
                 'message' => "Không thể chuyển từ trạng thái '{$this->validStatuses[$oldStatus]}' sang '{$this->validStatuses[$newStatus]}'"
@@ -369,8 +371,7 @@ class OrderController extends Controller
             }
 
             // Khi chuyển sang ready_to_pick, có thể tự động cập nhật shipping_fee nếu cần
-            if ($newStatus === 'ready_to_pick' && !$order->shipping_code) {
-                // Logic để tính phí ship nếu chưa có
+            if ($newStatus === 'ready_to_pick' && ! $order->shipping_code) {
                 Log::info('Order ready to pick', ['order_id' => $order->id]);
             }
 
@@ -380,7 +381,6 @@ class OrderController extends Controller
                     'order_id' => $order->id,
                     'delivered_at' => now()
                 ]);
-                // Có thể thêm logic gửi email thông báo giao hàng thành công
             }
 
         } catch (\Exception $e) {
@@ -418,10 +418,10 @@ class OrderController extends Controller
     {
         $today = now();
         $datePrefix = $today->format('dmY');
-        
+
         $orderCount = Order::whereDate('created_at', $today->toDateString())->count();
         $sequenceNumber = str_pad($orderCount + 1, 2, '0', STR_PAD_LEFT);
-        
+
         return $datePrefix . $sequenceNumber;
     }
 
@@ -435,12 +435,12 @@ class OrderController extends Controller
 
             $orderWithItems = Order::with(['orderItems.book', 'user'])->find($orderId);
 
-            if (!$orderWithItems) {
+            if (! $orderWithItems) {
                 Log::error('Order not found when loading for email', ['order_id' => $orderId]);
                 return;
             }
 
-            if (!$user->email) {
+            if (! $user->email) {
                 Log::error('User email is empty', ['user_id' => $user->id]);
                 return;
             }
@@ -467,13 +467,17 @@ class OrderController extends Controller
     public function createShipping(Request $request, $orderId): JsonResponse
     {
         try {
-            $user = Auth::user();
-            Log::info('Bắt đầu tạo đơn ship cho order ID: ' . $orderId);
+            $user = Auth::guard('api')->user();
+            if (! $user) {
+                return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập'], 401);
+            }
+
+            Log::info('Bắt đầu tạo đơn ship', ['order_id' => $orderId, 'by' => $user->id]);
 
             $order = Order::with(['orderItems.book', 'user'])->find($orderId);
 
-            if (!$order) {
-                Log::warning("Không tìm thấy đơn hàng ID: {$orderId}");
+            if (! $order) {
+                Log::warning("Không tìm thấy đơn hàng", ['order_id' => $orderId]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Không tìm thấy đơn hàng'
@@ -481,7 +485,7 @@ class OrderController extends Controller
             }
 
             if ($order->shipping_code) {
-                Log::info("Đơn hàng {$orderId} đã có mã vận đơn: " . $order->shipping_code);
+                Log::info("Đơn hàng đã có mã vận đơn", ['order_id' => $orderId, 'shipping_code' => $order->shipping_code]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Đơn hàng đã có mã vận đơn: ' . $order->shipping_code
@@ -490,10 +494,10 @@ class OrderController extends Controller
 
             DB::beginTransaction();
             try {
-                Log::info("Gọi GHN API tạo đơn hàng cho order ID: {$orderId}");
+                Log::info("Gọi GHN API tạo đơn hàng", ['order_id' => $orderId]);
                 $shippingResult = $this->createGHNShippingOrder($order, $request);
 
-                if (!$shippingResult['success']) {
+                if (! $shippingResult['success']) {
                     DB::rollBack();
                     Log::error("Lỗi từ GHN: " . $shippingResult['message']);
                     return response()->json([
@@ -505,14 +509,13 @@ class OrderController extends Controller
                 $shippingFee = $shippingResult['data']['total_fee'] ?? 0;
                 $order->update([
                     'shipping_code' => $shippingResult['data']['order_code'],
-                    'status' => 'ready_to_pick', // Tự động chuyển sang ready_to_pick
+                    'status' => 'ready_to_pick',
                     'shipping_fee' => $shippingFee,
                     'total_price' => $order->price + $shippingFee
                 ]);
 
                 DB::commit();
-
-                Log::info("Tạo đơn ship thành công cho order ID: {$order->id}, mã vận đơn: " . $order->shipping_code);
+                Log::info("Tạo đơn ship thành công", ['order_id' => $order->id, 'shipping_code' => $order->shipping_code]);
 
                 $order->refresh();
 
@@ -579,7 +582,7 @@ class OrderController extends Controller
                 'items' => $items
             ];
 
-            Log::info("Dữ liệu gửi GHN:", $orderData);
+            Log::info("Dữ liệu gửi GHN", $orderData);
 
             $response = Http::withHeaders([
                 'Token' => $this->ghnToken,
@@ -594,17 +597,16 @@ class OrderController extends Controller
 
             if ($response->successful()) {
                 $responseData = $response->json();
-                if ($responseData['code'] == 200) {
+                if (($responseData['code'] ?? 0) == 200) {
                     return [
                         'success' => true,
                         'data' => $responseData['data']
                     ];
-                } else {
-                    return [
-                        'success' => false,
-                        'message' => $responseData['message'] ?? 'Lỗi từ GHN'
-                    ];
                 }
+                return [
+                    'success' => false,
+                    'message' => $responseData['message'] ?? 'Lỗi từ GHN'
+                ];
             } else {
                 return [
                     'success' => false,
@@ -621,117 +623,122 @@ class OrderController extends Controller
         }
     }
 
-public function index(Request $request): JsonResponse
-{
-    try {
-        $user = Auth::user();
-        $perPage = $request->input('per_page', 10);
-        $status = $request->input('status');
-        $sortBy = $request->input('sort_by', 'created_at');
-        $sortOrder = $request->input('sort_order', 'desc');
+    public function index(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::guard('api')->user();
+            if (! $user) {
+                return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập'], 401);
+            }
 
-        // --- Query đơn hàng thường ---
-        $query = Order::with(['orderItems.book.author', 'orderItems.book.category'])
-            ->where('user_id', $user->id);
+            $perPage   = $request->input('per_page', 10);
+            $status    = $request->input('status');
+            $sortBy    = $request->input('sort_by', 'created_at');
+            $sortOrder = $request->input('sort_order', 'desc');
 
-        if ($status) {
-            $query->where('status', $status);
-        }
+            // --- Query đơn hàng thường ---
+            $query = Order::with(['orderItems.book.author', 'orderItems.book.category'])
+                ->where('user_id', $user->id);
 
-        $query->orderBy($sortBy, $sortOrder);
-        $orders = $query->paginate($perPage);
+            if ($status) {
+                $query->where('status', $status);
+            }
 
-        $formattedOrders = collect($orders->items())->map(function ($order) {
-            return [
-                'id'          => $order->id,
-                'status'      => $order->status,
-                'payment'     => $order->payment,
-                'price'       => $order->price,
-                'shipping_fee'=> $order->shipping_fee,
-                'total_price' => $order->total_price,
-                'address'     => $order->address,
-                'phone'       => $order->phone,
-                'created_at'  => $order->created_at,
-                'updated_at'  => $order->updated_at,
-                'items'       => $order->orderItems->map(function ($item) {
-                    return [
-                        'id'       => $item->id,
-                        'quantity' => $item->quantity,
-                        'price'    => $item->price,
-                        'book'     => [
-                            'id'       => $item->book->id,
-                            'title'    => $item->book->title,
-                            'image'    => $item->book->image,
-                            'price'    => $item->book->price,
-                            'author'   => $item->book->author?->name,
-                            'category' => $item->book->category?->name,
-                        ]
-                    ];
-                }),
-                'total_items' => $order->orderItems->sum('quantity')
-            ];
-        });
+            $orders = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
-        // --- Query lịch sử group orders ---
-        $groupOrders = GroupOrder::with(['members.user:id,name','items.book:id,title,cover_image'])
-            ->whereHas('members', fn($q) => $q->where('user_id', $user->id))
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($g) {
+            $formattedOrders = collect($orders->items())->map(function ($order) {
                 return [
-                    'id'         => $g->id,
-                    'status'     => $g->status,
-                    'expires_at' => $g->expires_at,
-                    'join_url'   => $g->join_url,
-                    'members'    => $g->members->map(fn($m) => [
-                        'id'    => $m->id,
-                        'name'  => $m->display_name,
-                        'role'  => $m->role,
-                        'user_id' => $m->user_id,
-                    ]),
-                    'items' => $g->items->map(fn($i) => [
-                        'id'    => $i->id,
-                        'title' => $i->book->title,
-                        'cover_image' => $i->book->cover_image,
-                        'qty'   => $i->quantity,
-                        'price' => $i->price_snapshot,
-                    ]),
-                    'total' => $g->items->sum(fn($i) => $i->quantity * $i->price_snapshot),
-                    'created_at' => $g->created_at,
+                    'id'          => $order->id,
+                    'status'      => $order->status,
+                    'payment'     => $order->payment,
+                    'price'       => $order->price,
+                    'shipping_fee'=> $order->shipping_fee,
+                    'total_price' => $order->total_price,
+                    'address'     => $order->address,
+                    'phone'       => $order->phone,
+                    'created_at'  => $order->created_at,
+                    'updated_at'  => $order->updated_at,
+                    'items'       => $order->orderItems->map(function ($item) {
+                        return [
+                            'id'       => $item->id,
+                            'quantity' => $item->quantity,
+                            'price'    => $item->price,
+                            'book'     => [
+                                'id'       => $item->book->id,
+                                'title'    => $item->book->title,
+                                'image'    => $item->book->image,
+                                'price'    => $item->book->price,
+                                'author'   => $item->book->author?->name,
+                                'category' => $item->book->category?->name,
+                            ]
+                        ];
+                    }),
+                    'total_items' => $order->orderItems->sum('quantity')
                 ];
             });
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Lấy danh sách đơn hàng thành công',
-            'data' => [
-                'orders'       => $formattedOrders,
-                'pagination'   => [
-                    'current_page' => $orders->currentPage(),
-                    'per_page'     => $orders->perPage(),
-                    'total'        => $orders->total(),
-                    'last_page'    => $orders->lastPage(),
-                ],
-                'group_orders' => $groupOrders, // 👈 thêm lịch sử group order ở đây
-            ]
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
-        ], 500);
-    }
-}
+            // --- Query lịch sử group orders ---
+            $groupOrders = GroupOrder::with(['members.user:id,name','items.book:id,title,cover_image'])
+                ->whereHas('members', fn($q) => $q->where('user_id', $user->id))
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($g) {
+                    return [
+                        'id'         => $g->id,
+                        'status'     => $g->status,
+                        'expires_at' => $g->expires_at,
+                        'join_url'   => $g->join_url,
+                        'members'    => $g->members->map(fn($m) => [
+                            'id'    => $m->id,
+                            'name'  => $m->display_name,
+                            'role'  => $m->role,
+                            'user_id' => $m->user_id,
+                        ]),
+                        'items' => $g->items->map(fn($i) => [
+                            'id'    => $i->id,
+                            'title' => $i->book->title,
+                            'cover_image' => $i->book->cover_image,
+                            'qty'   => $i->quantity,
+                            'price' => $i->price_snapshot,
+                        ]),
+                        'total' => $g->items->sum(fn($i) => $i->quantity * $i->price_snapshot),
+                        'created_at' => $g->created_at,
+                    ];
+                });
 
+            return response()->json([
+                'success' => true,
+                'message' => 'Lấy danh sách đơn hàng thành công',
+                'data' => [
+                    'orders'       => $formattedOrders,
+                    'pagination'   => [
+                        'current_page' => $orders->currentPage(),
+                        'per_page'     => $orders->perPage(),
+                        'total'        => $orders->total(),
+                        'last_page'    => $orders->lastPage(),
+                    ],
+                    'group_orders' => $groupOrders,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function show($orderId): JsonResponse
     {
         try {
-            $user = Auth::user();
+            $user = Auth::guard('api')->user();
+            if (! $user) {
+                return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập'], 401);
+            }
 
             $order = Order::with(['orderItems.book.author', 'orderItems.book.category', 'user'])->find($orderId);
 
-            if (!$order) {
+            if (! $order) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Không tìm thấy đơn hàng'
@@ -803,14 +810,17 @@ public function index(Request $request): JsonResponse
     public function getOrderStats(): JsonResponse
     {
         try {
-            $user = Auth::user();
+            $user = Auth::guard('api')->user();
+            if (! $user) {
+                return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập'], 401);
+            }
 
             $stats = [
-                'total_orders' => Order::count(),
-                'pending_orders' => Order::where('status', 'pending')->count(),
+                'total_orders'      => Order::count(),
+                'pending_orders'    => Order::where('status', 'pending')->count(),
                 'processing_orders' => Order::whereIn('status', ['ready_to_pick', 'picking', 'picked', 'delivering'])->count(),
-                'delivered_orders' => Order::where('status', 'delivered')->count(),
-                'cancelled_orders' => Order::where('status', 'cancelled')->count()
+                'delivered_orders'  => Order::where('status', 'delivered')->count(),
+                'cancelled_orders'  => Order::where('status', 'cancelled')->count()
             ];
 
             return response()->json([
@@ -829,9 +839,8 @@ public function index(Request $request): JsonResponse
     public function cancelOrder($orderId): JsonResponse
     {
         try {
-            $user = Auth::user();
-
-            if (!$user) {
+            $user = Auth::guard('api')->user();
+            if (! $user) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Bạn cần đăng nhập để thực hiện thao tác này'
@@ -840,7 +849,7 @@ public function index(Request $request): JsonResponse
 
             $order = Order::find($orderId);
 
-            if (!$order) {
+            if (! $order) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Không tìm thấy đơn hàng'
@@ -849,7 +858,7 @@ public function index(Request $request): JsonResponse
 
             // Kiểm tra xem có thể hủy đơn hàng không
             $statusChangeResult = $this->validateStatusChange($order->status, 'cancelled');
-            if (!$statusChangeResult['allowed']) {
+            if (! $statusChangeResult['allowed']) {
                 return response()->json([
                     'success' => false,
                     'message' => $statusChangeResult['message']
@@ -914,11 +923,17 @@ public function index(Request $request): JsonResponse
     public function getAllOrders(Request $request): JsonResponse
     {
         try {
-            $user = Auth::user();
+            $user = Auth::guard('api')->user();
+            if (! $user) {
+                return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập'], 401);
+            }
 
-            $perPage = $request->input('per_page', 10);
-            $status = $request->input('status');
-            $sortBy = $request->input('sort_by', 'created_at');
+            // (Gợi ý) enforce quyền admin tại đây nếu cần:
+            // if (! $user->is_admin) return response()->json(['message' => 'Forbidden'], 403);
+
+            $perPage   = $request->input('per_page', 10);
+            $status    = $request->input('status');
+            $sortBy    = $request->input('sort_by', 'created_at');
             $sortOrder = $request->input('sort_order', 'desc');
 
             $query = Order::with(['user', 'orderItems.book.author', 'orderItems.book.category']);
@@ -927,8 +942,7 @@ public function index(Request $request): JsonResponse
                 $query->where('status', $status);
             }
 
-            $query->orderBy($sortBy, $sortOrder);
-            $orders = $query->paginate($perPage);
+            $orders = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
             $formattedOrders = collect($orders->items())->map(function ($order) {
                 return [
@@ -978,11 +992,11 @@ public function index(Request $request): JsonResponse
                     'orders' => $formattedOrders,
                     'pagination' => [
                         'current_page' => $orders->currentPage(),
-                        'per_page' => $orders->perPage(),
+                        'per_page' => $orders->PerPage(),
                         'total' => $orders->total(),
                         'last_page' => $orders->lastPage(),
                         'from' => $orders->firstItem(),
-                        'to' => $orders->lastItem()
+                        'to'   => $orders->lastItem()
                     ]
                 ]
             ]);
@@ -994,13 +1008,18 @@ public function index(Request $request): JsonResponse
         }
     }
 
-    // API để lấy thông tin tracking từ GHN (vẫn giữ để tham khảo nếu cần)
+    // API để lấy thông tin tracking từ GHN (tham khảo)
     public function getShippingInfo($orderId): JsonResponse
     {
         try {
+            $user = Auth::guard('api')->user();
+            if (! $user) {
+                return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập'], 401);
+            }
+
             $order = Order::find($orderId);
 
-            if (!$order || !$order->shipping_code) {
+            if (! $order || ! $order->shipping_code) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Không tìm thấy mã vận đơn'
@@ -1031,6 +1050,100 @@ public function index(Request $request): JsonResponse
                 'success' => false,
                 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    // ====== WEBHOOK & SYNC ======
+    // Webhook GHN: đừng yêu cầu JWT, nên có secret verify riêng (tuỳ ông)
+    public function updateShippingStatus(Request $request): JsonResponse
+    {
+        try {
+            Log::info('GHN Webhook hit', ['payload' => $request->all()]);
+
+            $orderCode = $request->input('OrderCode') ?? $request->input('order_code');
+            $status    = $request->input('Status') ?? $request->input('status');
+
+            if (! $orderCode) {
+                return response()->json(['success' => false, 'message' => 'Thiếu order_code'], 400);
+            }
+
+            $order = Order::where('shipping_code', $orderCode)->first();
+            if (! $order) {
+                return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn ứng với mã vận đơn'], 404);
+            }
+
+            // map trạng thái GHN -> internal (tuỳ chỉnh thêm)
+            $map = [
+                'ready_to_pick' => 'ready_to_pick',
+                'picking'       => 'picking',
+                'picked'        => 'picked',
+                'transporting'  => 'delivering',
+                'delivering'    => 'delivering',
+                'delivered'     => 'delivered',
+                'cancel'        => 'cancelled',
+                'return'        => 'cancelled',
+            ];
+            if ($status && isset($map[$status])) {
+                $old = $order->status;
+                $order->status = $map[$status];
+                $order->save();
+                Log::info('Webhook updated status', ['order_id' => $order->id, 'old' => $old, 'new' => $order->status]);
+            }
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('Webhook error', ['err' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Server error'], 500);
+        }
+    }
+
+    // Đồng bộ trạng thái từ GHN (gọi thủ công có JWT)
+    public function syncOrderStatusFromGHN($orderId): JsonResponse
+    {
+        try {
+            $user = Auth::guard('api')->user();
+            if (! $user) return response()->json(['success'=>false,'message'=>'Bạn cần đăng nhập'], 401);
+
+            $order = Order::find($orderId);
+            if (! $order || ! $order->shipping_code) {
+                return response()->json(['success'=>false,'message'=>'Không tìm thấy vận đơn để sync'], 404);
+            }
+
+            $res = Http::withHeaders([
+                'Token' => $this->ghnToken,
+                'Content-Type' => 'application/json'
+            ])->post($this->ghnApiUrl.'/shipping-order/detail', [
+                'order_code' => $order->shipping_code
+            ]);
+
+            if (! $res->successful()) {
+                return response()->json(['success'=>false,'message'=>'GHN trả lỗi: '.$res->body()], 400);
+            }
+
+            $data = $res->json()['data'] ?? [];
+            $ghnStatus = $data['status'] ?? null;
+
+            $map = [
+                'ready_to_pick' => 'ready_to_pick',
+                'picking'       => 'picking',
+                'picked'        => 'picked',
+                'transporting'  => 'delivering',
+                'delivering'    => 'delivering',
+                'delivered'     => 'delivered',
+                'cancel'        => 'cancelled',
+                'return'        => 'cancelled',
+            ];
+
+            if ($ghnStatus && isset($map[$ghnStatus])) {
+                $old = $order->status;
+                $order->update(['status' => $map[$ghnStatus]]);
+                Log::info('Synced order status from GHN', ['order_id'=>$order->id,'old'=>$old,'new'=>$order->status]);
+            }
+
+            return response()->json(['success'=>true,'data'=>$data]);
+        } catch (\Exception $e) {
+            Log::error('Sync error', ['err'=>$e->getMessage()]);
+            return response()->json(['success'=>false,'message'=>'Server error'], 500);
         }
     }
 }

@@ -1238,7 +1238,7 @@ button.btn-ghost:hover{ border-color:#cfcfcf!important; }
 
   // ====== Views by Category from CORRECT API ======
   async function buildViewsFromAPI(){
-    const apiUrl = 'http://localhost:8000/api/books/search?limit=500';
+    const apiUrl = 'http://smartbook.io.vn/api/books/search?limit=500';
     let weekMap = new Map();
     let monthMap = new Map();
 
@@ -1363,7 +1363,7 @@ button.btn-ghost:hover{ border-color:#cfcfcf!important; }
 
   // ====== Publisher Chart từ API ======
   async function buildPublisherChart() {
-    const apiUrl = 'http://localhost:8000/api/books/search?limit=5000';
+    const apiUrl = 'http://smartbook.io.vn/api/books/search?limit=5000';
     let publisherMap = new Map();
 
     try{
